@@ -1,69 +1,173 @@
-import Image from "next/image";
+import Navbar from "../components/navbar";
+import Footer from "../components/Footer";
+
+const topics = [
+  { title: "Leadership & Governance", count: "42 NUGGETS", img: "/images/leadership.jpg" },
+  { title: "Money & Stewardship", count: "30 NUGGETS", img: "/images/money.jpg" },
+  { title: "Strategy & Planning", count: "50 NUGGETS", img: "/images/strategy.jpg" },
+];
+
+const wisdomTags = [
+  "Starting a Business",
+  "Money & Cashflow Problems",
+  "Managing Difficult People",
+  "Strategic Decision Making",
+  "Scaling & Growth Pressures",
+  "Leadership Burnout",
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+    <div className="min-h-screen bg-black flex flex-col">
+      <Navbar />
+
+      <main className="flex-1">
+        {/* Hero */}
+        <section
+          className="relative bg-cover bg-center py-24 px-6 text-center"
+          style={{ backgroundImage: "url('/images/hero.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-black/70" />
+          <div className="relative max-w-3xl mx-auto">
+            <p className="text-amber-300 text-xs tracking-widest uppercase mb-3">
+              Timeless Biblical Wisdom for Today&apos;s Marketplace
+            </p>
+            <h1 className="text-white text-4xl md:text-5xl font-serif font-semibold mb-6">
+              Command Your Business with Absolute Clarity
+            </h1>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl mx-auto">
+              <input
+                type="text"
+                placeholder="Search by scripture, business challenge, or book..."
+                className="w-full bg-neutral-900 border border-gray-700 rounded-md px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
+              />
+              <button className="bg-amber-300 text-black font-medium px-6 py-2 rounded-md hover:bg-amber-400 transition whitespace-nowrap">
+                Start Discovering
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Today's Business Nugget */}
+        <section className="max-w-5xl mx-auto px-6 py-16">
+          <h2 className="text-white text-xl font-serif font-semibold mb-6">Today&apos;s Business Nugget</h2>
+
+          <div className="bg-neutral-950 border border-gray-800 rounded-xl overflow-hidden md:flex">
+            <div
+              className="md:w-1/2 h-56 md:h-auto bg-cover bg-center"
+              style={{ backgroundImage: "url('/images/nugget-featured.jpg')" }}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            <div className="p-6 md:w-1/2 flex flex-col justify-center">
+              <p className="text-amber-300 text-xs tracking-wide uppercase mb-2">
+                Integrity &amp; Character &middot; Bible Lens
+              </p>
+              <h3 className="text-white text-lg font-semibold mb-3">
+                The Law of Just Balances in Corporate Negotiation
+              </h3>
+              <p className="text-gray-400 text-sm italic mb-6">
+                &ldquo;A false balance is an abomination to the Lord, but a just weight is His delight.&rdquo; &mdash; Proverbs 11:1
+              </p>
+              <div className="flex gap-3">
+                <button className="bg-amber-300 text-black text-sm font-medium px-4 py-2 rounded-md hover:bg-amber-400 transition">
+                  Listen Audio (Musical)
+                </button>
+                <button className="border border-gray-700 text-gray-300 text-sm px-4 py-2 rounded-md hover:border-gray-500 transition">
+                  Read Commentary
+                </button>
+              </div>  
+            </div>
+          </div>
+        </section>
+
+        {/* I Need Wisdom About */}
+        <section className="max-w-5xl mx-auto px-6 pb-16">
+          <h2 className="text-white text-xl font-serif font-semibold mb-6">I Need Wisdom About...</h2>
+          <div className="flex flex-wrap gap-3">
+            {wisdomTags.map((tag, i) => (
+              <span
+                key={tag}
+                className={`text-sm px-4 py-2 rounded-full border ${
+                  i === 0
+                    ? "bg-amber-300 text-black border-amber-300"
+                    : "text-gray-300 border-gray-700 hover:border-gray-500"
+                }`}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        {/* Browse by Core Topic */}
+        <section className="max-w-5xl mx-auto px-6 pb-16">
+          <h2 className="text-white text-xl font-serif font-semibold mb-6">Browse by Core Topic</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {topics.map((topic) => (
+              <div
+                key={topic.title}
+                className="relative h-40 rounded-lg overflow-hidden bg-cover bg-center flex items-end p-4"
+                style={{ backgroundImage: `url('${topic.img}')` }}
+              >
+                <div className="absolute inset-0 bg-black/50" />
+                <span className="absolute top-3 right-3 text-[10px] bg-black/60 text-amber-300 px-2 py-1 rounded">
+                  {topic.count}
+                </span>
+                <p className="relative text-white font-medium">{topic.title}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Featured Wisdom Musicals */}
+        <section className="max-w-5xl mx-auto px-6 pb-16">
+          <h2 className="text-white text-xl font-serif font-semibold mb-1">Featured Wisdom Musicals</h2>
+          <p className="text-gray-400 text-sm mb-6">
+            Immersive audio teachings layered over professional cinematic soundtracks and ambient orchestration.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { title: "Joseph's Seven-Year Reserve Blueprint", meta: "Genesis 41 · David O. & London Symphony", time: "12:40" },
+              { title: "The Architectural Mind: Building with Nehemiah", meta: "Nehemiah 3 · Amina Vance & RNB Sound", time: "10:10" },
+            ].map((track) => (
+              <div
+                key={track.title}
+                className="flex items-center gap-4 bg-neutral-950 border border-gray-800 rounded-lg p-3"
+              >
+                <div className="w-16 h-16 rounded bg-neutral-800 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-white text-sm font-medium">{track.title}</p>
+                  <p className="text-gray-500 text-xs">{track.meta}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">{track.time}</span>
+                  <button className="w-8 h-8 rounded-full bg-amber-300 text-black flex items-center justify-center">
+                    ▶
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Latest Biblical Nuggets */}
+        <section className="max-w-5xl mx-auto px-6 pb-16">
+          <h2 className="text-white text-xl font-serif font-semibold mb-6">Latest Biblical Nuggets</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {["/images/nugget-1.jpg", "/images/nugget-2.jpg", "/images/nugget-3.jpg", "/images/nugget-4.jpg"].map(
+              (img, i) => (
+                <div
+                  key={i}
+                  className="h-32 rounded-lg bg-cover bg-center"
+                  style={{ backgroundImage: `url('${img}')` }}
+                />
+              )
+            )}
+          </div>
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 }
