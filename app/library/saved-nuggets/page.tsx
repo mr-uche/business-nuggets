@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   Search,
   Bookmark,
-  LockKeyhole,
 } from "lucide-react";
 
 const savedNuggets = [
@@ -47,48 +46,57 @@ const filters = [
 
 export default function SavedNuggetsPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-[#EDEAE3]">
+    <div className="min-h-screen overflow-x-hidden bg-[#050505] text-[#EDEAE3]">
+
       <Navbar />
 
-      <main className="mx-auto max-w-[1200px] px-10 py-14">
+      <main className="mx-auto max-w-[1200px] px-5 py-9 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
 
         {/* ================= HEADER ================= */}
-        <div className="flex items-start justify-between">
 
-          <div>
-            <h1 className="font-serif text-[25px] text-white">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+
+          <div className="min-w-0">
+
+            <h1 className="font-serif text-[23px] text-white sm:text-[25px]">
               Saved Nuggets
             </h1>
 
-            <p className="mt-2 text-[14px] text-white/40">
+            <p className="mt-2 text-[12px] leading-relaxed text-white/40 sm:text-[14px]">
               Your personal library of timeless business frameworks.
             </p>
+
           </div>
 
+
           {/* Search */}
-          <div className="flex h-9 w-[280px] items-center gap-2 rounded-md border border-white/10 bg-[#111111] px-3">
+
+          <div className="flex h-9 w-full items-center gap-2 rounded-md border border-white/10 bg-[#111111] px-3 sm:h-10 lg:w-[280px]">
+
             <Search
-              size={18}
-              className="text-white/35"
+              size={17}
+              className="shrink-0 text-white/35"
             />
 
             <input
               type="text"
               placeholder="Search saved nuggets..."
-              className="w-full bg-transparent text-[15px] text-white outline-none placeholder:text-white/30"
+              className="min-w-0 w-full bg-transparent text-[12px] text-white outline-none placeholder:text-white/30 sm:text-[14px]"
             />
+
           </div>
 
         </div>
 
 
         {/* ================= FILTERS ================= */}
-        <div className="mt-7 flex items-center gap-2">
 
+        <div className="mt-6 flex gap-2 overflow-x-auto pb-1 sm:mt-7">
           {filters.map((filter, index) => (
             <button
               key={filter}
-              className={`rounded-full border px-4 py-1.5 text-[14px] transition ${
+              type="button"
+              className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[11px] transition sm:px-4 sm:text-[13px] ${
                 index === 0
                   ? "border-[#C9A227] bg-[#C9A227] text-black"
                   : "border-white/10 bg-[#151515] text-white/60 hover:border-[#C9A227]/50 hover:text-white"
@@ -97,38 +105,42 @@ export default function SavedNuggetsPage() {
               {filter}
             </button>
           ))}
-
         </div>
 
 
         {/* ================= SAVED CARDS ================= */}
-        <section className="mt-5 grid grid-cols-4 gap-4">
+
+        <section className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
           {savedNuggets.map((nugget) => (
             <Link
               href="/library/reader"
               key={nugget.title}
-              className="group overflow-hidden rounded-md border border-white/10 bg-[#0d0d0d] transition hover:border-[#C9A227]/40"
+              className="group min-w-0 overflow-hidden rounded-md border border-white/10 bg-[#0d0d0d] transition hover:border-[#C9A227]/40"
             >
 
               {/* Image */}
-              <div className="h-[120px] w-full overflow-hidden bg-[#17130d]">
+
+              <div className="h-[150px] w-full overflow-hidden bg-[#17130d] sm:h-[135px] lg:h-[120px]">
+
                 <img
                   
                 />
+
               </div>
 
 
               {/* Card content */}
+
               <div className="px-3.5 py-3">
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
 
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-[#C9A227]">
+                  <p className="min-w-0 text-[10px] font-medium uppercase tracking-wide text-[#C9A227] sm:text-[11px]">
                     {nugget.category}
                   </p>
 
-                  <span className="text-[11px] text-white/35">
+                  <span className="shrink-0 text-[10px] text-white/35 sm:text-[11px]">
                     {nugget.reference}
                   </span>
 
@@ -140,20 +152,20 @@ export default function SavedNuggetsPage() {
                 </h2>
 
 
-                <p className="mt-2 text-[11px] leading-relaxed text-white/40">
+                <p className="mt-2 text-[10px] leading-relaxed text-white/40 sm:text-[11px]">
                   {nugget.description}
                 </p>
 
 
                 <div className="mt-3 flex items-center justify-between">
 
-                  <span className="text-[12px] text-[#C9A227]">
+                  <span className="text-[11px] text-[#C9A227] sm:text-[12px]">
                     Listen & Read
                   </span>
 
                   <Bookmark
                     size={15}
-                    className="text-[#C9A227]"
+                    className="shrink-0 text-[#C9A227]"
                   />
 
                 </div>
@@ -167,25 +179,34 @@ export default function SavedNuggetsPage() {
 
 
         {/* ================= EMPTY FOLDER ================= */}
-        <section className="flex min-h-[300px] flex-col items-center justify-center">
+
+        <section className="flex min-h-[260px] flex-col items-center justify-center px-4 py-10 sm:min-h-[300px]">
 
           <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-[#0d0d0d]">
+
             <Bookmark
               size={18}
               className="text-[#C9A227]"
             />
+
           </div>
 
-          <h2 className="mt-6 font-serif text-[15px] text-white">
+
+          <h2 className="mt-5 text-center font-serif text-[14px] text-white sm:mt-6 sm:text-[15px]">
             No custom folders created yet
           </h2>
 
-          <p className="mt-2 max-w-[330px] text-center text-[12px] leading-relaxed text-white/40">
+
+          <p className="mt-2 max-w-[330px] text-center text-[11px] leading-relaxed text-white/40 sm:text-[12px]">
             Organize your bookmarked scriptures and teachings into specific
             business playlists.
           </p>
 
-          <button className="mt-5 rounded-md bg-[#C9A227] px-7 py-2 text-[12px] font-medium text-black transition hover:bg-[#DDB93A]">
+
+          <button
+            type="button"
+            className="mt-5 rounded-md bg-[#C9A227] px-6 py-2 text-[11px] font-medium text-black transition hover:bg-[#DDB93A] sm:px-7 sm:text-[12px]"
+          >
             Create Folder
           </button>
 
@@ -194,6 +215,7 @@ export default function SavedNuggetsPage() {
       </main>
 
       <Footer />
+
     </div>
   );
 }

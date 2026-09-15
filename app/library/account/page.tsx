@@ -269,49 +269,53 @@ export default function AccountSettingsPage() {
 
         {/* MOBILE NAVIGATION*/}
 
-        <div className="relative mt-7 lg:hidden">
+       {/* ================= MOBILE NAVIGATION ================= */}
 
-          <button
-            type="button"
-            onClick={() => setMobileNavOpen((value) => !value)}
-            className="flex w-full items-center justify-between rounded-md border border-white/10 bg-[#0d0d0d] px-4 py-3 text-sm text-white"
-          >
-            <span>{active}</span>
+{/* ================= MOBILE TAB DROPDOWN ================= */}
 
-            <ChevronDown
-              size={17}
-              className={`transition-transform ${
-                mobileNavOpen ? "rotate-180" : ""
-              }`}
-            />
-          </button>
+<div className="relative z-50 mt-7 w-full lg:hidden">
 
+  <button
+    type="button"
+    onClick={() => setMobileNavOpen((prev) => !prev)}
+    className="flex w-full items-center justify-between rounded-md border border-white/10 bg-[#0d0d0d] px-4 py-3 text-left"
+  >
+    <span className="truncate pr-4 text-sm font-medium text-white">
+      {active}
+    </span>
 
-          {mobileNavOpen && (
-            <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-md border border-white/10 bg-[#111111] shadow-xl">
+    <ChevronDown
+      size={18}
+      className={`shrink-0 text-white/60 transition-transform duration-200 ${
+        mobileNavOpen ? "rotate-180" : ""
+      }`}
+    />
+  </button>
 
-              {navItems.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => handleNavigation(item)}
-                  className={`block w-full px-4 py-3 text-left text-sm transition-colors ${
-                    active === item
-                      ? "bg-[#C9A227] font-medium text-[#0B0B0A]"
-                      : item === "Delete Account"
-                      ? "text-red-400 hover:bg-white/5"
-                      : "text-white/60 hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
+  {mobileNavOpen && (
+    <div className="mt-2 w-full overflow-hidden rounded-md border border-white/10 bg-[#111111] shadow-xl">
 
-            </div>
-          )}
+      {navItems.map((item) => (
+        <button
+          key={item}
+          type="button"
+          onClick={() => handleNavigation(item)}
+          className={`block w-full px-4 py-3 text-left text-sm transition-colors ${
+            active === item
+              ? "bg-[#C9A227] font-medium text-black"
+              : "text-white/60 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <span className="whitespace-nowrap">
+            {item}
+          </span>
+        </button>
+      ))}
 
-        </div>
+    </div>
+  )}
 
+</div>
 
         {/* DESKTOP NAV + CONTENT */}
 
@@ -397,7 +401,35 @@ export default function AccountSettingsPage() {
 
                 </div>
 
-                 {/* Playback & Streaming Preferences */}
+             {/* Core Business Interests */}
+            <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6">
+              <h2 className="text-base font-semibold text-white">Core Business Interests</h2>
+              <p className="mt-1 mb-4 text-xs text-white/40">
+                Select targets you need consistent biblical strategy inputs for.
+              </p>
+ 
+              <div className="flex flex-wrap gap-2">
+                {interestOptions.map((interest) => {
+                  const selected = selectedInterests.includes(interest);
+                  return (
+                    <button
+                      key={interest}
+                      onClick={() => toggleInterest(interest)}
+                      className={`rounded-full px-4 py-2 text-xs font-medium transition-colors ${
+                        selected
+                          ? "bg-[#C9A227] text-[#0B0B0A]"
+                          : "border border-white/15 text-white/60 hover:bg-white/5"
+                      }`}
+                    >
+                      {interest}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+ 
+
+               {/* Playback & Streaming Preferences */}
             <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6">
               <h2 className="mb-5 text-base font-semibold text-white">
                 Playback &amp; Streaming Preferences
