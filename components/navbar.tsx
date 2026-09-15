@@ -9,8 +9,8 @@ export default function Navbar() {
             B
           </div>
           <div>
-            <p className="text-white font-serif font-semibold leading-none">BUSINESS NUGGETS</p>
-            <p className="text-gray-400 text-[10px] tracking-wide">Wisdom for the Bible</p>
+            <p className="text-white font-Inter font-extrabold text-[14px] leading-none">BUSINESS NUGGETS</p>
+            <p className="text-[#C8A35A] font-400 font-EB_Garamond italic text-[11px] tracking-wide">from the Bible</p>
           </div>
         </Link>
 
