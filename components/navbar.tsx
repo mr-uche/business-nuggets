@@ -1,6 +1,22 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { UserCircle } from "lucide-react";
+
+const EXCLUDED_ROUTES = ["/", "/login", "/register", "/onboarding"];
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showProfile = mounted && !EXCLUDED_ROUTES.includes(pathname);
+
   return (
     <header className="bg-black border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -21,13 +37,21 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-4 text-sm">
-          <Link href="/login" className="text-gray-300 hover:text-white">Login</Link>
-          <Link
-            href="/register"
-            className="bg-amber-300 text-black font-medium px-4 py-2 rounded-md hover:bg-amber-400 transition"
-          >
-            Sign Up
-          </Link>
+          {showProfile ? (
+            <button className="flex items-center gap-2 text-gray-200 hover:text-amber-300 transition">
+              <UserCircle className="w-8 h-8" />
+            </button>
+          ) : (
+            <>
+              <Link href="/login" className="text-gray-300 hover:text-white">Login</Link>
+              <Link
+                href="/register"
+                className="bg-amber-300 text-black font-medium px-4 py-2 rounded-md hover:bg-amber-400 transition"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
