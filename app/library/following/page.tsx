@@ -1,9 +1,6 @@
 import Navbar from "@/components/navbar";
 import Footer from "@/components/Footer";
-import {
-  Plus,
-  X,
-} from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 const topics = [
   {
@@ -64,9 +61,9 @@ function FollowCard({
     <div className="rounded-md border border-white/10 bg-[#0d0d0d] p-3.5">
 
       {/* Title row */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
 
-        <div>
+        <div className="min-w-0">
           <h3 className="font-serif text-[12px] text-white">
             {title}
           </h3>
@@ -77,7 +74,7 @@ function FollowCard({
         </div>
 
         {newCount && (
-          <span className="rounded-sm bg-red-500/10 px-2 py-1 text-[10px] text-red-400">
+          <span className="shrink-0 rounded-sm bg-red-500/10 px-2 py-1 text-[10px] text-red-400">
             {newCount}
           </span>
         )}
@@ -86,7 +83,10 @@ function FollowCard({
 
 
       {/* Unfollow button */}
-      <button className="mt-3 flex h-7 w-full items-center justify-center rounded border border-white/10 text-[11px] text-white/45 transition hover:border-white/20 hover:text-white">
+      <button
+        type="button"
+        className="mt-3 flex h-7 w-full items-center justify-center rounded border border-white/10 text-[11px] text-white/45 transition hover:border-white/20 hover:text-white"
+      >
         {buttonText}
       </button>
 
@@ -100,15 +100,16 @@ export default function FollowingPage() {
 
       <Navbar />
 
-      <main className="mx-auto max-w-[1200px] px-10 py-12">
+      <main className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
 
         {/* ================= HEADER ================= */}
+
         <div>
-          <h1 className="font-serif text-[28px] text-white">
+          <h1 className="font-serif text-[26px] text-white sm:text-[28px]">
             Following
           </h1>
 
-          <p className="mt-2 text-[12px] text-white/40">
+          <p className="mt-2 max-w-2xl text-[12px] leading-relaxed text-white/40 sm:text-[13px]">
             Manage wisdom channels, curated collections, and business topic
             logs you&apos;re actively monitoring.
           </p>
@@ -116,9 +117,11 @@ export default function FollowingPage() {
 
 
         {/* ================= THREE COLUMNS ================= */}
-        <div className="mt-8 grid grid-cols-3 gap-5">
+
+        <div className="mt-8 grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
 
           {/* ================= TOPICS ================= */}
+
           <section>
 
             <h2 className="mb-4 text-[10px] font-medium uppercase tracking-wide text-[#C9A227]">
@@ -143,6 +146,7 @@ export default function FollowingPage() {
 
 
           {/* ================= CHALLENGES ================= */}
+
           <section>
 
             <h2 className="mb-4 text-[10px] font-medium uppercase tracking-wide text-[#C9A227]">
@@ -167,6 +171,7 @@ export default function FollowingPage() {
 
 
           {/* ================= COLLECTIONS ================= */}
+
           <section>
 
             <h2 className="mb-4 text-[10px] font-medium uppercase tracking-wide text-[#C9A227]">
@@ -192,7 +197,6 @@ export default function FollowingPage() {
         </div>
 
       </main>
-
 
       <Footer />
 

@@ -1,3 +1,5 @@
+"use client";
+
 import Navbar from "@/components/navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -11,7 +13,7 @@ import {
   PenSquare,
   FileText,
 } from "lucide-react";
- 
+
 const wisdomQueue = [
   {
     number: 1,
@@ -32,111 +34,246 @@ const wisdomQueue = [
     duration: "07:20",
   },
 ];
- 
+
 export default function NuggetPlayerPage() {
   return (
-    <div className="min-h-screen bg-black text-[#EDEAE3]">
+    <div className="min-h-screen overflow-x-hidden bg-black text-[#EDEAE3]">
+
       <Navbar />
- 
-      <main className="mx-auto max-w-6xl px-8 py-12 lg:px-16">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
-          {/* Player column */}
-          <div>
-            <div className="h-72 w-full overflow-hidden rounded-lg bg-gradient-to-br from-[#3a2f1c] to-[#141110]" />
- 
-            <div className="mt-8 text-center">
-              <p className="text-xs font-medium tracking-wide text-[#C9A227]">
+
+      <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10 lg:px-16 lg:py-12">
+
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+
+          {/* =====================================================
+              PLAYER COLUMN
+          ===================================================== */}
+
+          <div className="min-w-0">
+
+            {/* Player / Artwork */}
+            <div className="h-48 w-full overflow-hidden rounded-lg bg-gradient-to-br from-[#3a2f1c] to-[#141110] sm:h-60 lg:h-72" />
+
+
+            {/* Title */}
+            <div className="mt-7 text-center sm:mt-8">
+
+              <p className="text-[10px] font-medium tracking-wide text-[#C9A227] sm:text-xs">
                 Proverbs 11:1 · Core Principle
               </p>
-              <h1 className="mt-3 font-serif text-2xl leading-snug text-white sm:text-3xl">
+
+              <h1 className="mx-auto mt-3 max-w-3xl font-serif text-xl leading-snug text-white sm:text-2xl lg:text-3xl">
                 The Law of Just Balances in Corporate Negotiation
               </h1>
-              <p className="mx-auto mt-4 max-w-xl text-sm italic leading-relaxed text-white/40">
-                &ldquo;A false balance is an abomination to the Lord, but a just weight is his
-                delight.&rdquo;
+
+              <p className="mx-auto mt-4 max-w-xl text-xs italic leading-relaxed text-white/40 sm:text-sm">
+                &ldquo;A false balance is an abomination to the Lord, but a
+                just weight is his delight.&rdquo;
               </p>
+
             </div>
- 
-            {/* Progress bar */}
-            <div className="mt-10">
+
+
+            {/* =================================================
+                PROGRESS BAR
+            ================================================= */}
+
+            <div className="mt-8 sm:mt-10">
+
               <div className="h-1 w-full rounded-full bg-white/10">
                 <div className="h-1 w-[28%] rounded-full bg-[#C9A227]" />
               </div>
-              <div className="mt-2 flex justify-between text-xs text-white/40">
+
+              <div className="mt-2 flex justify-between text-[10px] text-white/40 sm:text-xs">
                 <span>02:15</span>
                 <span>08:00</span>
               </div>
+
             </div>
- 
-            {/* Playback controls */}
-            <div className="mt-6 flex items-center justify-center gap-6">
-              <button className="text-white/50 hover:text-white" aria-label="Shuffle">
+
+
+            {/* =================================================
+                PLAYBACK CONTROLS
+            ================================================= */}
+
+            <div className="mt-6 flex items-center justify-center gap-4 sm:gap-6">
+
+              {/* Shuffle */}
+              <button
+                type="button"
+                className="text-white/50 transition hover:text-white"
+                aria-label="Shuffle"
+              >
                 <Shuffle size={18} />
               </button>
-              <button className="text-white/70 hover:text-white" aria-label="Previous">
+
+
+              {/* Previous */}
+              <button
+                type="button"
+                className="text-white/70 transition hover:text-white"
+                aria-label="Previous"
+              >
                 <SkipBack size={20} />
               </button>
+
+
+              {/* Play */}
               <button
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-[#C9A227] text-[#0B0B0A] hover:bg-[#DDB93A]"
+                type="button"
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#C9A227] text-[#0B0B0A] transition hover:bg-[#DDB93A] sm:h-16 sm:w-16"
                 aria-label="Play"
               >
-                <Play size={22} fill="currentColor" />
+                <Play
+                  size={22}
+                  fill="currentColor"
+                  className="sm:h-6 sm:w-6"
+                />
               </button>
-              <button className="text-white/70 hover:text-white" aria-label="Next">
+
+
+              {/* Next */}
+              <button
+                type="button"
+                className="text-white/70 transition hover:text-white"
+                aria-label="Next"
+              >
                 <SkipForward size={20} />
               </button>
-              <span className="rounded-full border border-white/15 px-3 py-1 text-xs text-[#C9A227]/60">
+
+
+              {/* Speed */}
+              <button
+                type="button"
+                className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] text-[#C9A227]/70 sm:px-3 sm:text-xs"
+              >
                 1.5x
-              </span>
+              </button>
+
             </div>
- 
-            {/* Action row */}
-            <div className="mt-10 flex items-center justify-center gap-10 border-t border-white/10 pt-6">
-              <button className="flex flex-col items-center gap-1.5 text-xs text-white/50 hover:text-white">
-                <Bookmark size={18} />
-                Save
+
+
+            {/* =================================================
+                ACTION ROW
+            ================================================= */}
+
+            <div className="mt-8 grid grid-cols-4 border-t border-white/10 pt-5 sm:mt-10 sm:flex sm:items-center sm:justify-center sm:gap-10">
+
+              {/* Save */}
+              <button
+                type="button"
+                className="flex flex-col items-center gap-1.5 text-[10px] text-white/50 transition hover:text-white sm:text-xs"
+              >
+                <Bookmark size={17} />
+                <span>Save</span>
               </button>
-              <button className="flex flex-col items-center gap-1.5 text-xs text-white/50 hover:text-white">
-                <ListPlus size={18} />
-                Playlist
+
+
+              {/* Playlist */}
+              <button
+                type="button"
+                className="flex flex-col items-center gap-1.5 text-[10px] text-white/50 transition hover:text-white sm:text-xs"
+              >
+                <ListPlus size={17} />
+                <span>Playlist</span>
               </button>
-              <button className="flex flex-col items-center gap-1.5 text-xs text-white/50 hover:text-white">
-                <PenSquare size={18} />
-                Write Notes
+
+
+              {/* Notes */}
+              <button
+                type="button"
+                className="flex flex-col items-center gap-1.5 text-[10px] text-white/50 transition hover:text-white sm:text-xs"
+              >
+                <PenSquare size={17} />
+                <span>Write Notes</span>
               </button>
-              <button className="flex flex-col items-center gap-1.5 text-xs text-white/50 hover:text-white">
-                <FileText size={18} />
-                Transcript
+
+
+              {/* Transcript */}
+              <button
+                type="button"
+                className="flex flex-col items-center gap-1.5 text-[10px] text-white/50 transition hover:text-white sm:text-xs"
+              >
+                <FileText size={17} />
+                <span>Transcript</span>
               </button>
+
             </div>
+
           </div>
- 
-          {/* Wisdom Queue sidebar */}
-          <aside>
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-white">Wisdom Queue</h2>
-              <Link href="/library/reader" className="text-xs font-medium text-[#C9A227] hover:underline">
+
+
+          {/* =====================================================
+              WISDOM QUEUE
+          ===================================================== */}
+
+          <aside className="min-w-0">
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:items-start">
+
+              <h2 className="text-base font-semibold text-white">
+                Wisdom Queue
+              </h2>
+
+              <Link
+                href="/library/reader"
+                className="w-fit text-[10px] font-medium text-[#C9A227] hover:underline sm:text-xs"
+              >
                 Open Full Reader View
               </Link>
+
             </div>
- 
-            <div className="mt-5 divide-y divide-white/10 rounded-lg border border-white/10">
+
+
+            {/* Queue */}
+            <div className="mt-4 divide-y divide-white/10 rounded-lg border border-white/10">
+
               {wisdomQueue.map((item) => (
-                <div key={item.number} className="flex items-center gap-3 px-4 py-3">
-                  <span className="text-xs font-medium text-white/30">{item.number}</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-white">{item.title}</p>
-                    <p className="text-xs text-white/40">{item.reference}</p>
+
+                <div
+                  key={item.number}
+                  className="flex items-start gap-3 px-3 py-3 sm:px-4 sm:py-3"
+                >
+
+                  {/* Number */}
+                  <span className="pt-0.5 text-[10px] font-medium text-white/30 sm:text-xs">
+                    {item.number}
+                  </span>
+
+
+                  {/* Text */}
+                  <div className="min-w-0 flex-1">
+
+                    <p className="text-xs font-medium leading-snug text-white sm:text-sm">
+                      {item.title}
+                    </p>
+
+                    <p className="mt-1 text-[10px] text-white/40 sm:text-xs">
+                      {item.reference}
+                    </p>
+
                   </div>
-                  <span className="text-xs text-white/40">{item.duration}</span>
+
+
+                  {/* Duration */}
+                  <span className="shrink-0 pt-0.5 text-[10px] text-white/40 sm:text-xs">
+                    {item.duration}
+                  </span>
+
                 </div>
+
               ))}
+
             </div>
+
           </aside>
+
         </div>
+
       </main>
- 
+
       <Footer />
+
     </div>
   );
 }
