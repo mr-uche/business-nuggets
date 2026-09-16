@@ -11,17 +11,17 @@ const relatedMusicals = [
   {
     title: "Joseph's Storehouse Strategy",
     reference: "Genesis 41",
-    image: "/images/joseph-storehouse.png",
+    image: "/images/cinematic-musical1.png",
   },
   {
     title: "Nehemiah's Wall Construction",
     reference: "Nehemiah 3",
-    image: "/images/nehemiah-wall.png",
+    image: "/images/cinematic-musical2.png",
   },
   {
     title: "Sovereign Capital & Stewardship",
     reference: "Proverbs 13:22",
-    image: "/images/sovereign-capital.png",
+    image: "/images/cinematic-musical3.png",
   },
 ];
  
@@ -41,7 +41,10 @@ export default function NuggetPlayerPage() {
             {/* Cover */}
             <div className="h-[220px] w-[220px] overflow-hidden rounded-lg border border-white/10 bg-[#17130d]">
               <img
-              />
+              src="/images/musical.png"
+              alt="musical"
+              className="h-full w-full object-cover"
+             />
             </div>
  
             {/* Category */}
@@ -169,9 +172,13 @@ export default function NuggetPlayerPage() {
                 {/* Thumbnail */}
                 <div className="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-sm bg-[#19140d]">
                   <img
-                    
+                    src={item.image}
+                    alt={item.title}
+                    className="h-full w-full object-cover"
                   />
                 </div>
+
+ 
  
                 {/* Card text */}
                 <div className="min-w-0">

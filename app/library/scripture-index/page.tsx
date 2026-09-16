@@ -7,12 +7,14 @@ const featured = [
     category: "Negotiation",
     title: "The Law of Just Balances in Corporate Negotiation",
     meta: "8 Min Listen • Integrity",
+     Image: "/images/scripture-index.png",
   },
   {
     reference: "Proverbs 22:7",
     category: "Finance",
     title: "Sovereign Capital & Lender Bondage Control",
     meta: "9 Min Listen • Finance",
+    Image: "/images/scripture-index1.png",
   },
 ];
 
@@ -64,7 +66,7 @@ export default function BookOfProverbsPage() {
           <div className="max-w-2xl">
 
             <p className="mb-3 text-[10px] font-medium tracking-wide text-[#C9A227] sm:text-xs">
-              Scripture Index / Detailed
+              Scripture Index Detailed
             </p>
 
             <h1 className="font-serif text-3xl leading-tight text-white sm:text-4xl lg:text-5xl">
@@ -114,7 +116,13 @@ export default function BookOfProverbsPage() {
               >
 
                 {/* Image */}
-                <div className="h-20 w-20 shrink-0 rounded-md bg-gradient-to-br from-[#3a2f1c] to-[#1c1712] sm:h-20 sm:w-24" />
+                <div className="h-20 w-20 shrink-0 rounded-md border border-radius-[6px] border-black/1 overflow-hidden bg-gradient-to-br from-[#3a2f1c] to-[#1c1712] sm:h-20 sm:w-24" >
+                  <img
+                  src={item.Image}
+                  alt={item.title}
+                  className="h-full w-full object-cover"
+                  />
+                </div>
 
                 {/* Content */}
                 <div className="min-w-0">

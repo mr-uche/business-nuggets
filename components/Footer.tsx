@@ -18,7 +18,7 @@ export default function Footer() {
           <h4 className="text-white font-semibold mb-3">Platform</h4>
           <ul className="space-y-2 text-sm">
             <li><Link href="/library" className="hover:text-white">Library</Link></li>
-            <li><Link href="/musicals" className="hover:text-white">Musicals</Link></li>
+            <li><Link href="/library/musical" className="hover:text-white">Musicals</Link></li>
             <li><Link href="/library/scripture-index" className="hover:text-white">Scripture Index</Link></li>
           </ul>
         </div>

@@ -19,7 +19,7 @@ const playlistItems = [
     title: "Joseph's Seven-Year Reserve Blueprint",
     reference: "Genesis 41:1–36",
     duration: "12:45",
-    image: "/images/joseph-storehouse.png",
+    image: "/images/playlist-details1.png",
   },
   {
     number: "2",
@@ -27,7 +27,7 @@ const playlistItems = [
     title: "Delegation Infrastructure & Jethro's Governance",
     reference: "Exodus 18:13–26",
     duration: "08:15",
-    image: "/images/conflict-resolution.png",
+    image: "/images/playlist-details2.png",
   },
   {
     number: "3",
@@ -35,7 +35,7 @@ const playlistItems = [
     title: "The Construction Wisdom: Building with Nehemiah",
     reference: "Nehemiah 2",
     duration: "15:10",
-    image: "/images/nehemiah-wall.png",
+    image: "/images/playlist-details3.png",
   },
   {
     number: "4",
@@ -43,7 +43,7 @@ const playlistItems = [
     title: "The Hazard of Swift Ascent in Partnerships",
     reference: "Proverbs 11:1",
     duration: "05:00",
-    image: "/images/saved-hazard.png",
+    image: "/images/playlist-details4.png",
   },
 ];
  
@@ -62,7 +62,9 @@ export default function PlaylistDetailPage() {
             {/* Playlist image */}
             <div className="h-[160px] w-full shrink-0 overflow-hidden rounded-md bg-[#17130d] sm:h-[120px] sm:w-[150px]">
               <img
-                
+                src="/images/playlist-details.png"
+                alt="playlist-details"
+                className="h-full w-full object-cover"
               />
             </div>
  
@@ -150,9 +152,11 @@ export default function PlaylistDetailPage() {
  
               {/* Thumbnail */}
               <div className="ml-2 h-[43px] w-[48px] shrink-0 overflow-hidden rounded-sm bg-[#17130d]">
-                <img
-                 
-                />
+                 <img
+                    src={item.image}
+                    alt={item.title}
+                    className="h-full w-full object-cover"
+                  />
               </div>
  
  

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Nugget } from "@/types/nugget";
 
+
 export default function NuggetCard({ nugget }: { nugget: Nugget }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-amber-300/50 transition group">

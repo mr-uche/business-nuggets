@@ -4,36 +4,37 @@ import Link from "next/link";
 import {
   Search,
   Bookmark,
+  Clock,
 } from "lucide-react";
 
 const savedNuggets = [
   {
-    image: "/images/saved-hazard.png",
+    image: "/images/saved-nugget1.png",
     category: "LEADERSHIP",
-    reference: "Isaiah 41:10",
+    duration: "5 Mins",
     title: "The Hazard of Swift Ascent in...",
-    description: "Principles of patient and...",
+    description: "Isaiah 41:10",
   },
   {
-    image: "/images/saved-delegation.png",
+    image: "/images/saved-nugget2.png",
     category: "STRATEGY",
-    reference: "Exodus 18:21",
+    duration: "8 Mins",
     title: "Delegation Infrastructure & J...",
-    description: "Building systems that scale...",
+    description: "Exodus 18:21",
   },
   {
-    image: "/images/saved-strategy.png",
+    image: "/images/saved-nugget3.png",
     category: "STRATEGY",
-    reference: "Habakkuk 2:2",
+    duration: "7 Mins",
     title: "Strategic Hedging & Global T...",
-    description: "Wisdom for navigating...",
+    description: "Habakkuk 2:2",
   },
   {
-    image: "/images/saved-integrity.png",
+    image: "/images/saved-nugget4.png",
     category: "CHARACTER",
-    reference: "Proverbs 11:1",
+    duration: "6 Mins",
     title: "The Integrity Premium: Uniqu...",
-    description: "Why integrity compounds...",
+    description: "Proverbs 11:1",
   },
 ];
 
@@ -58,11 +59,11 @@ export default function SavedNuggetsPage() {
 
           <div className="min-w-0">
 
-            <h1 className="font-serif text-[23px] text-white sm:text-[25px]">
+            <h1 className="font-serif text-[40px] text-white sm:text-[25px]">
               Saved Nuggets
             </h1>
 
-            <p className="mt-2 text-[12px] leading-relaxed text-white/40 sm:text-[14px]">
+            <p className="mt-2 text-[16px] leading-relaxed text-white/40 sm:text-[14px]">
               Your personal library of timeless business frameworks.
             </p>
 
@@ -74,14 +75,14 @@ export default function SavedNuggetsPage() {
           <div className="flex h-9 w-full items-center gap-2 rounded-md border border-white/10 bg-[#111111] px-3 sm:h-10 lg:w-[280px]">
 
             <Search
-              size={17}
+              size={16}
               className="shrink-0 text-white/35"
             />
 
             <input
               type="text"
               placeholder="Search saved nuggets..."
-              className="min-w-0 w-full bg-transparent text-[12px] text-white outline-none placeholder:text-white/30 sm:text-[14px]"
+              className="min-w-0 w-full bg-transparent text-[14px] text-white outline-none placeholder:text-white/30 sm:text-[14px]"
             />
 
           </div>
@@ -96,7 +97,7 @@ export default function SavedNuggetsPage() {
             <button
               key={filter}
               type="button"
-              className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[11px] transition sm:px-4 sm:text-[13px] ${
+              className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[14px] transition sm:px-4 sm:text-[13px] ${
                 index === 0
                   ? "border-[#C9A227] bg-[#C9A227] text-black"
                   : "border-white/10 bg-[#151515] text-white/60 hover:border-[#C9A227]/50 hover:text-white"
@@ -124,7 +125,9 @@ export default function SavedNuggetsPage() {
               <div className="h-[150px] w-full overflow-hidden bg-[#17130d] sm:h-[135px] lg:h-[120px]">
 
                 <img
-                  
+                  src={nugget.image}
+                  alt={nugget.title}
+                  className="h-full w-full object-cover"
                 />
 
               </div>
@@ -136,30 +139,32 @@ export default function SavedNuggetsPage() {
 
                 <div className="flex items-center justify-between gap-2">
 
-                  <p className="min-w-0 text-[10px] font-medium uppercase tracking-wide text-[#C9A227] sm:text-[11px]">
+                  <p className="min-w-0 text-[12px] font-bold uppercase tracking-wide text-[#C9A227] sm:text-[11px]">
                     {nugget.category}
                   </p>
 
-                  <span className="shrink-0 text-[10px] text-white/35 sm:text-[11px]">
-                    {nugget.reference}
+                  <span className=" shrink-0 text-[10px] flex items-center justify-center gap-2 text-white/35 sm:text-[11px]">
+                   <Clock size={15}
+                    className=" mt-0 text-white/35"/>
+                    {nugget.duration}
                   </span>
 
                 </div>
 
 
-                <h2 className="mt-2 font-serif text-[14px] leading-snug text-white">
+                <h2 className="mt-2 font-serif text-[20px] leading-snug text-white sm:text-[14px]">
                   {nugget.title}
                 </h2>
 
 
-                <p className="mt-2 text-[10px] leading-relaxed text-white/40 sm:text-[11px]">
+                <p className="mt-2 text-[12px] leading-relaxed  italic text-white/40 sm:text-[11px]">
                   {nugget.description}
                 </p>
 
 
                 <div className="mt-3 flex items-center justify-between">
 
-                  <span className="text-[11px] text-[#C9A227] sm:text-[12px]">
+                  <span className="text-[13px] text-[#C9A227] sm:text-[12px]">
                     Listen & Read
                   </span>
 

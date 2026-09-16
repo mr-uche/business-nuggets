@@ -23,7 +23,7 @@ export type Nugget = {
       scriptureRef: "Proverbs 11:1",
       scriptureText:
         "A false balance is an abomination to the Lord, but a just weight is his delight.",
-      image: "/images/nuggets/just-balances.jpg",
+    image: "/images/nuggetd-card1.png",
       keyPrinciple:
         "In classical Near Eastern commerce, merchants used physical balances to determine price. A dishonest merchant used double standards—heavier weights for buying, lighter weights for selling. Today, this manifests as asymmetric information disclosure, hidden corporate traps, and misleading contract phrasing. The Principle of Just Balances asserts that absolute pricing and negotiation transparency is not a moral concession; it is a foundational framework for sustainable marketplace dominion.",
       marketplaceApplication:

@@ -1,6 +1,6 @@
 import Navbar from "@/components/navbar";
 import Footer from "@/components/Footer";
-import { RotateCcw, Bookmark } from "lucide-react";
+import {  Bookmark, Headset} from "lucide-react";
 
 const units = [
   {
@@ -43,13 +43,19 @@ export default function StartingYourBusinessPage() {
 
           {/* Hero Image */}
 
-          <div className="h-48 w-full shrink-0 rounded-lg bg-gradient-to-br from-[#3a2f1c] to-[#141110] sm:h-56 lg:h-56 lg:w-64" />
+          <div className="h-48 w-full shrink-0 rounded-lg bg-gradient-to-br from-[#3a2f1c] to-[#141110] sm:h-56 lg:h-56 lg:w-64" >
+           <img
+              src="/images/collection-main.png"
+              alt="Starting Your Business God's Way"
+              className="h-full w-full object-cover"
+            />
+            </div>
 
           {/* Hero Content */}
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 ">
 
-            <p className="text-xs font-medium tracking-wide text-[#C9A227]">
+            <p className="text-[12px] font-medium tracking-wide text-[#C9A227]">
               Curated Learning Pathway
             </p>
 
@@ -57,7 +63,7 @@ export default function StartingYourBusinessPage() {
               Starting Your Business God&apos;s Way
             </h1>
 
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/50">
+            <p className="mt-4 max-w-2xl text-[18px] leading-relaxed text-white/50">
               An ordered, executive roadmap designed to guide prospective founders
               from ideation to sovereign launch. Sync your operations with
               historical, unshakeable blueprints.
@@ -112,7 +118,7 @@ export default function StartingYourBusinessPage() {
 
         <section className="mt-12 sm:mt-14">
 
-          <h2 className="mb-5 text-lg font-semibold text-white">
+          <h2 className="mb-5 text-lg font-semibold text-white text-[28px]">
             Chronological Blueprint Units
           </h2>
 
@@ -127,21 +133,27 @@ export default function StartingYourBusinessPage() {
 
                 {/* Unit information */}
 
-                <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                <div className="flex min-w-0 font-serif items-center gap-3 sm:gap-4">
 
-                  <span className="shrink-0 text-sm font-medium text-white/30">
+                  <span className="shrink-0 text-[24px] font-bold text-[#C8A35A] sm:text-[18px]">
                     {unit.number}
                   </span>
 
-                  <div className="h-10 w-10 shrink-0 rounded-md bg-gradient-to-br from-[#3a2f1c] to-[#141110]" />
+                  <div className="h-15 w-15 shrink-0 rounded-md border border-black/1 border-radius-[6px] overflow-hidden bg-gradient-to-br from-[#3a2f1c] to-[#141110]" >
+                     <img src="/images/unit-information1.png" 
+                      alt="unit information" />
+
+                     <img src="/images/unit-information2.png" 
+                      alt="unit information" />
+                  </div>
 
                   <div className="min-w-0">
 
-                    <p className="text-sm font-medium leading-snug text-white">
+                    <p className="text-[18px] font-semibold leading-snug text-white">
                       {unit.title}
                     </p>
 
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="mt-0 text-[14] italic text-white/40">
                       {unit.reference}
                     </p>
 
@@ -154,21 +166,21 @@ export default function StartingYourBusinessPage() {
 
                 <div className="flex items-center gap-5 pl-[68px] lg:pl-0">
 
-                  <span className="text-xs text-white/40">
+                  <span className="text-[14px] text-white/40">
                     {unit.duration}
                   </span>
 
                   <button
                     type="button"
-                    className="text-white/40 hover:text-white"
-                    aria-label={`Replay ${unit.title}`}
+                    className="text-[#C8A35A] hover:text-white"
+                    aria-label={`Headset ${unit.title}`}
                   >
-                    <RotateCcw size={16} />
+                    <Headset size={16} />
                   </button>
 
                   <button
                     type="button"
-                    className="text-white/40 hover:text-white"
+                    className="text-[#C8A35A] hover:text-white"
                     aria-label={`Bookmark ${unit.title}`}
                   >
                     <Bookmark size={16} />
