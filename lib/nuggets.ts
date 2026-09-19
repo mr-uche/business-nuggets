@@ -11,7 +11,10 @@ export type Nugget = {
   marketplaceApplication: string;
   practicalActionPlan: string[];
   duration: string;
+  isGold?: boolean;
 };
+
+
 
 export const nuggets: Nugget[] = [
   {
