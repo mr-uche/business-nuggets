@@ -58,7 +58,7 @@ export default async function TopicDetailPage({
                 Featured {topic.split(" ")[0]} Wisdom
               </h2>
               <Link
-                href={`/nuggets/${featured.slug}`}
+                href={`/nugget/${featured.slug}`}
                 className="group block overflow-hidden rounded-xl border border-zinc-800"
               >
                 <div className="relative h-52 sm:h-64 w-full">

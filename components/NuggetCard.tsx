@@ -43,7 +43,7 @@ export default function NuggetCard({ nugget }: { nugget: Nugget }) {
 
         <div className="flex items-center justify-between">
           <Link
-            href={`/nuggets/${nugget.slug}`}
+            href={`/nugget/${nugget.slug}`}
             className="flex items-center gap-1.5 text-amber-300 text-sm font-medium hover:text-amber-400"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
