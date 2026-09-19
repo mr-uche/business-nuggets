@@ -16,15 +16,15 @@ export default function SearchPage() {
     <div className="min-h-screen bg-black flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-10">
-        <div className="flex gap-3 mb-2">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-10">
+        <div className="flex flex-col sm:flex-row gap-3 mb-2">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search nuggets, scriptures, or business challenges..."
             className="flex-1 bg-slate-700 border border-gray-800 text-white rounded-md px-4 py-3 text-sm focus:outline-none focus:border-amber-300"
           />
-          <button className="bg-amber-300 text-black font-medium px-5 py-3 rounded-md hover:bg-amber-400 transition whitespace-nowrap">
+          <button className="bg-amber-300 text-black font-medium px-5 py-3 rounded-md hover:bg-amber-400 transition whitespace-nowrap w-full sm:w-auto">
             Search Platform
           </button>
         </div>
@@ -39,9 +39,9 @@ export default function SearchPage() {
           {results.map((nugget) => (
             <div
               key={nugget.slug}
-              className="bg-gray-900 border border-gray-800 rounded-lg p-5 flex items-center justify-between gap-4"
+              className="bg-gray-900 border border-gray-800 rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-white font-serif font-semibold mb-1">{nugget.title}</h3>
                 <p className="text-amber-300 text-xs mb-2">
                   {nugget.scripture} • {nugget.category === "CHARACTER" ? "Character & Ethics" : nugget.category}
@@ -51,7 +51,7 @@ export default function SearchPage() {
                 )}
               </div>
 
-              <div className="flex flex-col items-end gap-2 shrink-0">
+              <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 shrink-0">
                 <Link
                   href={`/nugget/${nugget.slug}`}
                   className="bg-amber-300 text-black text-sm font-medium px-4 py-1.5 rounded-md hover:bg-amber-400 transition"

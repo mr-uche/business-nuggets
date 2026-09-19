@@ -2,17 +2,29 @@ import Link from "next/link";
 import Image from "next/image";
 import { Nugget } from "@/types/nugget";
 
+function isValidImageSrc(src?: string): src is string {
+  if (!src) return false;
+  return src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
+}
 
 export default function NuggetCard({ nugget }: { nugget: Nugget }) {
+  const hasValidImage = isValidImageSrc(nugget.image);
+
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-amber-300/50 transition group">
       <div className="relative h-40 w-full bg-gray-800">
-        <Image
-          src={nugget.image}
-          alt={nugget.title}
-          fill
-          className="object-cover"
-        />
+        {hasValidImage ? (
+          <Image
+            src={nugget.image}
+            alt={nugget.title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full w-full text-gray-600 text-xs">
+            No image
+          </div>
+        )}
         <span className="absolute top-2 left-2 text-[10px] font-semibold tracking-wide px-2 py-1 rounded bg-amber-300 text-black">
           {nugget.category}
         </span>
