@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/Footer";
 import NuggetCard from "@/components/NuggetCard";
-import { nuggets } from "@/types/nugget";
+import { nuggets } from "@/lib/nuggets";
 
 const businessTopics = [
   { label: "Leadership & Team", count: 12 },
@@ -144,7 +144,7 @@ export default function LibraryPage() {
                 >
                   <option>Most Recent</option>
                   <option>Most Popular</option>
-                  <option>A–Z</option>
+                  <option>A-Z</option>
                 </select>
               </div>
             </div>

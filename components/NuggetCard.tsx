@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Nugget } from "@/types/nugget";
+import type { Nugget } from "@/lib/nuggets";
 
 function isValidImageSrc(src?: string): src is string {
   if (!src) return false;
@@ -26,7 +26,7 @@ export default function NuggetCard({ nugget }: { nugget: Nugget }) {
           </div>
         )}
         <span className="absolute top-2 left-2 text-[10px] font-semibold tracking-wide px-2 py-1 rounded bg-amber-300 text-black">
-          {nugget.category}
+          {nugget.tag}
         </span>
         {nugget.isGold && (
           <span className="absolute top-2 right-2 text-[10px] font-semibold tracking-wide px-2 py-1 rounded bg-black/70 text-amber-300 border border-amber-300">
@@ -39,11 +39,11 @@ export default function NuggetCard({ nugget }: { nugget: Nugget }) {
         <h3 className="text-white font-serif font-semibold leading-snug mb-2 group-hover:text-amber-300 transition">
           {nugget.title}
         </h3>
-        <p className="text-gray-500 text-xs mb-3">{nugget.scripture}</p>
+        <p className="text-gray-500 text-xs mb-3">{nugget.scriptureRef}</p>
 
         <div className="flex items-center justify-between">
           <Link
-            href={`/nugget/${nugget.slug}`}
+            href={`/nuggets/${nugget.slug}`}
             className="flex items-center gap-1.5 text-amber-300 text-sm font-medium hover:text-amber-400"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">

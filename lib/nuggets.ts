@@ -185,6 +185,7 @@ export const nuggets: Nugget[] = [
       "Document the rationale so it isn't repeated as a norm.",
     ],
     duration: "04:58",
+    
   },
 ];
 
