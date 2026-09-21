@@ -1,8 +1,19 @@
+"use client";
+
 import Navbar from "@/components/navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    // TODO: real auth, then navigate only on success
+    router.push("/home");
+  }
+
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <Navbar />
@@ -30,7 +41,7 @@ export default function LoginPage() {
           </div>
 
           {/* Login Form */}
-          <form className="space-y-4 sm:space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             
             {/* Email */}
             <div>
