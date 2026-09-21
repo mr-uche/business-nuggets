@@ -1,20 +1,32 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Nugget } from "@/types/nugget";
+import type { Nugget } from "@/lib/nuggets";
 
+function isValidImageSrc(src?: string): src is string {
+  if (!src) return false;
+  return src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
+}
 
 export default function NuggetCard({ nugget }: { nugget: Nugget }) {
+  const hasValidImage = isValidImageSrc(nugget.image);
+
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-amber-300/50 transition group">
       <div className="relative h-40 w-full bg-gray-800">
-        <Image
-          src={nugget.image}
-          alt={nugget.title}
-          fill
-          className="object-cover"
-        />
+        {hasValidImage ? (
+          <Image
+            src={nugget.image}
+            alt={nugget.title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full w-full text-gray-600 text-xs">
+            No image
+          </div>
+        )}
         <span className="absolute top-2 left-2 text-[10px] font-semibold tracking-wide px-2 py-1 rounded bg-amber-300 text-black">
-          {nugget.category}
+          {nugget.tag}
         </span>
         {nugget.isGold && (
           <span className="absolute top-2 right-2 text-[10px] font-semibold tracking-wide px-2 py-1 rounded bg-black/70 text-amber-300 border border-amber-300">
@@ -27,7 +39,7 @@ export default function NuggetCard({ nugget }: { nugget: Nugget }) {
         <h3 className="text-white font-serif font-semibold leading-snug mb-2 group-hover:text-amber-300 transition">
           {nugget.title}
         </h3>
-        <p className="text-gray-500 text-xs mb-3">{nugget.scripture}</p>
+        <p className="text-gray-500 text-xs mb-3">{nugget.scriptureRef}</p>
 
         <div className="flex items-center justify-between">
           <Link

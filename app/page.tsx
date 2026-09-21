@@ -45,16 +45,16 @@ export default function Home() {
       <main className="flex-1">
         {/* Hero */}
         <section
-          className=" relative min-h-[450px] bg-cover bg-[position:center_15%] py-24 px-6 text-center"
-          style={{ backgroundImage: "url('/images/visiting-homepage.png')" }}
+          className="relative bg-cover bg-center py-16 sm:py-24 px-4 sm:px-6 text-center"
+          style={{ backgroundImage: "url('/images/hero.jpg')" }}
         >
           <div className="absolute inset-0 bg-black/70" />
           <div className="relative max-w-3xl mx-auto mt-12">
             <p className="text-amber-300 text-xs tracking-widest uppercase mb-3">
               Timeless Biblical Wisdom for Today&apos;s Marketplace
             </p>
-            <h1 className="mt-5 text-white text-4xl md:text-5xl font-serif font-semibold mb-6">
-              Command Your Business <br /> with Absolute Clarity
+            <h1 className="text-white text-3xl sm:text-4xl md:text-5xl font-serif font-semibold mb-6 leading-tight">
+              Command Your Business with Absolute Clarity
             </h1>
  
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl mx-auto">
@@ -63,7 +63,7 @@ export default function Home() {
                 placeholder="Search by scripture, business challenge, or book..."
                 className="w-full bg-neutral-900 border border-gray-700 rounded-md px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
               />
-              <button className="bg-amber-300 text-black font-medium px-6 py-2 rounded-md hover:bg-amber-400 transition whitespace-nowrap">
+              <button className="w-full sm:w-auto bg-amber-300 text-black font-medium px-6 py-2 rounded-md hover:bg-amber-400 transition whitespace-nowrap">
                 Start Discovering
               </button>
             </div>
@@ -71,15 +71,15 @@ export default function Home() {
         </section>
  
         {/* Today's Business Nugget */}
-        <section className="max-w-5xl mx-auto px-6 py-16">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <h2 className="text-white text-xl font-serif font-semibold mb-6">Today&apos;s Business Nugget</h2>
  
           <div className="bg-neutral-950 h-[250px] border border-amber-900/40 rounded-xl overflow-hidden md:flex">
             <div
-              className="md:w-[40%] h-full bg-cover bg-[position:center_15%] "
-              style={{ backgroundImage: "url('/images/visiting-homepage1.png')" }}
+              className="w-full h-48 sm:h-56 md:h-auto md:w-1/2 bg-cover bg-center"
+              style={{ backgroundImage: "url('/images/nugget-featured.jpg')" }}
             />
-            <div className="p-6 md:w-1/2 flex flex-col justify-center">
+            <div className="p-5 sm:p-6 md:w-1/2 flex flex-col justify-center">
               <p className="text-amber-300 text-xs tracking-wide uppercase mb-2">
                 Integrity &amp; Character &middot; 6 Min Listen
               </p>
@@ -89,7 +89,7 @@ export default function Home() {
               <p className="text-gray-400 text-sm italic mb-6">
                 &ldquo;A false balance is an abomination to the Lord, but a just weight is His delight.&rdquo; &mdash; Proverbs 11:1
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button className="bg-amber-300 text-black text-sm font-medium px-4 py-2 rounded-md hover:bg-amber-400 transition">
                   Listen Audio (Musical)
                 </button>
@@ -102,7 +102,7 @@ export default function Home() {
         </section>
  
         {/* I Need Wisdom About */}
-        <section className="max-w-5xl mx-auto px-6 pb-16">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
           <h2 className="text-white text-xl font-serif font-semibold mb-6">I Need Wisdom About...</h2>
           <div className="flex flex-wrap  gap-3">
             {wisdomTags.map((tag, i) => (
@@ -121,7 +121,7 @@ export default function Home() {
         </section>
  
         {/* Browse by Core Topic */}
-        <section className="max-w-5xl mx-auto px-6 pb-16">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
           <h2 className="text-white text-xl font-serif font-semibold mb-6">Browse by Core Topic</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {topics.map((topic) => (
@@ -144,7 +144,7 @@ export default function Home() {
         </section>
  
         {/* Featured Wisdom Musicals */}
-        <section className="max-w-5xl mx-auto px-6 pb-16">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
           <h2 className="text-white text-xl font-serif font-semibold mb-1">Featured Wisdom Musicals</h2>
           <p className="text-gray-400 text-sm mb-6">
             Immersive audio teachings layered over professional cinematic soundtracks and ambient orchestration.
@@ -153,23 +153,15 @@ export default function Home() {
             {musicalTracks.map((track) => (
               <div
                 key={track.title}
-                className="flex items-center gap-4 bg-neutral-950 border border-gray-800 rounded-lg p-3"
+                className="flex items-center gap-3 sm:gap-4 bg-neutral-950 border border-gray-800 rounded-lg p-3"
               >
-                <div className="w-16 h-16 rounded bg-neutral-800 shrink-0">
-                <img
-                 src={track.Images}
-                 className="h-full w-full object-cover rounded"
-                 />
-                </div>
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded bg-neutral-800 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-amber-300 text-[10px] font-medium uppercase tracking-wide mb-1">
-                    {track.reference}
-                  </p>
                   <p className="text-white text-sm font-medium truncate">{track.title}</p>
-                  <p className="text-gray-500 text-xs mt-1">{track.artist}</p>
+                  <p className="text-gray-500 text-xs truncate">{track.meta}</p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-gray-500 text-xs">{track.time}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-gray-500 text-xs hidden sm:inline">{track.time}</span>
                   <button className="w-8 h-8 rounded-full bg-amber-300 text-black flex items-center justify-center">
                     <ArrowRight size={16} />
                   </button>
@@ -180,14 +172,14 @@ export default function Home() {
         </section>
  
         {/* Latest Biblical Nuggets */}
-        <section className="max-w-5xl mx-auto px-6 pb-16">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
           <h2 className="text-white text-xl font-serif font-semibold mb-6">Latest Biblical Nuggets</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {["/images/saved-nugget1.png", "/images/saved-nugget2.png", "/images/saved-nugget3.png", "/images/saved-nugget4.png"].map(
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            {["/images/nugget-1.jpg", "/images/nugget-2.jpg", "/images/nugget-3.jpg", "/images/nugget-4.jpg"].map(
               (img, i) => (
                 <div
                   key={i}
-                  className="h-32 rounded-lg bg-cover bg-center"
+                  className="h-28 sm:h-32 rounded-lg bg-cover bg-center"
                   style={{ backgroundImage: `url('${img}')` }}
                 />
               )
