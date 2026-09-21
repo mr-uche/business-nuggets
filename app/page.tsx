@@ -45,8 +45,8 @@ export default function Home() {
       <main className="flex-1">
         {/* Hero */}
         <section
-          className="relative bg-cover bg-center py-16 sm:py-24 px-4 sm:px-6 text-center"
-          style={{ backgroundImage: "url('/images/hero.jpg')" }}
+          className="relative min-h-[450px] bg-cover bg-[position:center_15%] py-16 sm:py-24 px-4 sm:px-6 text-center"
+          style={{ backgroundImage: "url('/images/visiting-homepage.png')" }}
         >
           <div className="absolute inset-0 bg-black/70" />
           <div className="relative max-w-3xl mx-auto mt-12">
@@ -76,8 +76,8 @@ export default function Home() {
  
           <div className="bg-neutral-950 h-[250px] border border-amber-900/40 rounded-xl overflow-hidden md:flex">
             <div
-              className="w-full h-48 sm:h-56 md:h-auto md:w-1/2 bg-cover bg-center"
-              style={{ backgroundImage: "url('/images/nugget-featured.jpg')" }}
+              className="w-[40%] h-full bg-cover bg-center"
+              style={{ backgroundImage: "url('/images/visiting-homepage1.png')" }}
             />
             <div className="p-5 sm:p-6 md:w-1/2 flex flex-col justify-center">
               <p className="text-amber-300 text-xs tracking-wide uppercase mb-2">
@@ -155,10 +155,15 @@ export default function Home() {
                 key={track.title}
                 className="flex items-center gap-3 sm:gap-4 bg-neutral-950 border border-gray-800 rounded-lg p-3"
               >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded bg-neutral-800 shrink-0" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-neutral-800 shrink-0">
+                  <img src={track.Images} 
+                  alt={track.title} 
+                  className="w-full h-full object-cover" />
+                </div>
+
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-medium truncate">{track.title}</p>
-                  <p className="text-gray-500 text-xs truncate">{track.meta}</p>
+                  <p className="text-gray-500 text-xs truncate">{track.artist}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-gray-500 text-xs hidden sm:inline">{track.time}</span>
@@ -175,7 +180,7 @@ export default function Home() {
         <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
           <h2 className="text-white text-xl font-serif font-semibold mb-6">Latest Biblical Nuggets</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            {["/images/nugget-1.jpg", "/images/nugget-2.jpg", "/images/nugget-3.jpg", "/images/nugget-4.jpg"].map(
+            {["/images/saved-nugget1.png", "/images/saved-nugget2.png", "/images/saved-nugget3.png", "/images/saved-nugget4.png"].map(
               (img, i) => (
                 <div
                   key={i}
