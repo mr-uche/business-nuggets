@@ -155,13 +155,14 @@ export default function Home() {
                 key={track.title}
                 className="flex items-center gap-3 sm:gap-4 bg-neutral-950 border border-gray-800 rounded-lg p-3"
               >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-neutral-800 shrink-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-neutral-800 shrink-0 overflow-hidden">
                   <img src={track.Images} 
                   alt={track.title} 
                   className="w-full h-full object-cover" />
                 </div>
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                  <p className="text-amber-300 text-xs truncate">{track.reference}</p>
                   <p className="text-white text-sm font-medium truncate">{track.title}</p>
                   <p className="text-gray-500 text-xs truncate">{track.artist}</p>
                 </div>
