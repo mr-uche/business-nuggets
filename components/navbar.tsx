@@ -19,7 +19,7 @@ export default function Navbar() {
 
   return (
     <header className="bg-black border-b border-gray-800">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className=" mt-5 mb- max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-amber-300 rounded flex items-center justify-center font-bold text-black">
             B
@@ -46,7 +46,7 @@ export default function Navbar() {
               <Link href="/login" className="text-gray-300 hover:text-white">Login</Link>
               <Link
                 href="/register"
-                className="bg-amber-300 text-black font-medium px-4 py-2 rounded-md hover:bg-amber-400 transition"
+                className="bg-amber-300 text-black font-medium px-4 py-2 rounded-xs hover:bg-amber-400 transition"
               >
                 Sign Up
               </Link>

@@ -41,7 +41,7 @@ export default function NuggetPlayerPage() {
 
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10 lg:px-16 lg:py-12">
+      <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10 lg:px-16 lg:py-12">
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
 
@@ -52,13 +52,18 @@ export default function NuggetPlayerPage() {
           <div className="min-w-0">
 
             {/* Player / Artwork */}
-            <div className="h-48 w-full overflow-hidden rounded-lg bg-gradient-to-br from-[#3a2f1c] to-[#141110] sm:h-60 lg:h-72" />
-
+            <div className="h-48 w-full overflow-hidden rounded-lg bg-gradient-to-br from-[#3a2f1c] to-[#141110] sm:h-60 lg:h-72" >
+              <img
+              src="/images/audio-player.png"
+              alt="audio-player"
+              className="h-full w-full object-cover"/>
+              
+            </div>   
 
             {/* Title */}
             <div className="mt-7 text-center sm:mt-8">
 
-              <p className="text-[10px] font-medium tracking-wide text-[#C9A227] sm:text-xs">
+              <p className="text-[10px] font-medium tracking-wide text-[#C9A227] sm:text-[12px]">
                 Proverbs 11:1 · Core Principle
               </p>
 
@@ -207,7 +212,7 @@ export default function NuggetPlayerPage() {
               WISDOM QUEUE
           ===================================================== */}
 
-          <aside className="min-w-0">
+          <aside className="min-w-0 ">
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:items-start">
 
