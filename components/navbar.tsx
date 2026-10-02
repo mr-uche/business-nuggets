@@ -46,7 +46,7 @@ export default function Navbar() {
               <Link href="/login" className="text-gray-300 hover:text-white">Login</Link>
               <Link
                 href="/register"
-                className="bg-amber-300 text-black font-medium px-4 py-2 rounded-xs hover:bg-amber-400 transition"
+                className="bg-amber-300 text-black text-center font-medium px-4 py-2 rounded-xs hover:bg-amber-400 transition"
               >
                 Sign Up
               </Link>

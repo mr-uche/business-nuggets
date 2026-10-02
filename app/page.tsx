@@ -71,12 +71,12 @@ export default function Home() {
         </section>
  
         {/* Today's Business Nugget */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <section className=" max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 ">
           <h2 className="text-white text-xl font-serif font-semibold mb-6">Today&apos;s Business Nugget</h2>
  
-          <div className="bg-neutral-950 h-[250px] border border-amber-900/40 rounded-xl overflow-hidden md:flex">
+          <div className=" flex flex-col sm:flex-row bg-neutral-950 h-auto border border-amber-900/40 rounded-xl overflow-hidden md:flex">
             <div
-              className="w-[40%] h-full bg-cover bg-center"
+              className="w-full h-48 bg-cover bg-center sm:h-auto sm:w-[40%] "
               style={{ backgroundImage: "url('/images/visiting-homepage1.png')" }}
             />
             <div className="p-5 sm:p-6 md:w-1/2 flex flex-col justify-center">
