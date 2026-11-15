@@ -8,6 +8,7 @@ import {
 import {
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -18,7 +19,7 @@ import { detectMediaMime } from '../media/media-types';
 export type R2AudioKind = 'song' | 'nuggets';
 
 const MAX_AUDIO_SIZE = 50 * 1024 * 1024;
-const R2_REFERENCE = /^r2:\/\/(song|nuggets)\/([0-9a-f-]{36}\.mp3)$/i;
+const R2_REFERENCE = /^r2:\/\/(song|nuggets)\/(.+\.mp3)$/i;
 
 @Injectable()
 export class R2AudioService {
@@ -62,10 +63,25 @@ export class R2AudioService {
     return name;
   }
 
+  // Support existing filenames and folder paths.
+  // Preserve exact case because R2 object keys are case-sensitive.
+  private validAudioKey(key: string): boolean {
+    return (
+      Buffer.byteLength(key, 'utf8') <= 1024 &&
+      key.length > 0 &&
+      !key.startsWith('/') &&
+      !/[\x00-\x1f\x7f\\]/.test(key) &&
+      !key.split('/').some(
+        (part) => !part || part === '.' || part === '..',
+      ) &&
+      /\.mp3$/i.test(key)
+    );
+  }
+
   private parseReference(reference: string) {
     const match = R2_REFERENCE.exec(reference);
 
-    if (!match) {
+    if (!match || !this.validAudioKey(match[2])) {
       throw new BadRequestException('Invalid R2 audio reference');
     }
 
@@ -74,8 +90,67 @@ export class R2AudioService {
     return {
       kind,
       bucket: this.bucket(kind),
-      key: match[2].toLowerCase(),
+      key: match[2],
     };
+  }
+
+  // List existing MP3 objects without uploading or copying them.
+  async listFiles(
+    kind: R2AudioKind,
+    continuationToken?: string,
+  ) {
+    if (kind !== 'song' && kind !== 'nuggets') {
+      throw new BadRequestException('Invalid R2 audio bucket');
+    }
+
+    if (continuationToken && continuationToken.length > 4096) {
+      throw new BadRequestException('Invalid pagination token');
+    }
+
+    try {
+      const result = await this.client().send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket(kind),
+          MaxKeys: 100,
+          ...(continuationToken
+            ? { ContinuationToken: continuationToken }
+            : {}),
+        }),
+      );
+
+      const files = (result.Contents ?? [])
+        .filter(
+          (item) =>
+            typeof item.Key === 'string' &&
+            this.validAudioKey(item.Key) &&
+            (item.Size ?? 0) > 0,
+        )
+        .map((item) => {
+          const key = item.Key as string;
+
+          return {
+            key,
+            name: key.split('/').pop() ?? key,
+            size: item.Size ?? 0,
+            reference: `r2://${kind}/${key}`,
+          };
+        });
+
+      return {
+        files,
+        nextContinuationToken: result.IsTruncated
+          ? result.NextContinuationToken ?? null
+          : null,
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new BadGatewayException(
+        'Could not list audio files in R2',
+      );
+    }
   }
 
   async signUpload(
@@ -127,7 +202,8 @@ export class R2AudioService {
       );
 
       const size = Number(result.ContentLength ?? 0);
-      const contentType = result.ContentType?.split(';')[0].trim();
+      const contentType =
+        result.ContentType?.split(';')[0].trim();
 
       if (
         size < 1 ||
@@ -148,7 +224,9 @@ export class R2AudioService {
       );
 
       const bytes = sample.Body
-        ? Buffer.from(await sample.Body.transformToByteArray())
+        ? Buffer.from(
+            await sample.Body.transformToByteArray(),
+          )
         : Buffer.alloc(0);
 
       if (detectMediaMime(bytes) !== 'audio/mpeg') {
@@ -169,7 +247,9 @@ export class R2AudioService {
     }
   }
 
-  async resolvePlaybackUrl(reference: string | null | undefined) {
+  async resolvePlaybackUrl(
+    reference: string | null | undefined,
+  ) {
     if (!reference || !reference.startsWith('r2://')) {
       return reference ?? null;
     }

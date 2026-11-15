@@ -8,7 +8,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { IsIn, IsInt, IsString, Matches, Max, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsString,
+  Matches,
+  Max,
+  Min,
+} from 'class-validator';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
@@ -19,6 +26,7 @@ import {
 import { AdminIpAllowListGuard } from '../admin/admin-ip-allow-list.guard';
 import { R2AudioService } from './r2-audio.service';
 import type { R2AudioKind } from './r2-audio.service';
+
 class SignR2UploadDto {
   @IsIn(['song', 'nuggets'])
   kind: R2AudioKind;
@@ -47,7 +55,20 @@ class CompleteR2UploadDto {
 )
 @RequireAdminPermission('manageNuggets')
 export class R2AudioController {
-  constructor(private readonly storage: R2AudioService) {}
+  constructor(
+    private readonly storage: R2AudioService,
+  ) {}
+
+  @Get('files')
+  listFiles(
+    @Query('kind') kind: R2AudioKind,
+    @Query('continuationToken') continuationToken?: string,
+  ) {
+    return this.storage.listFiles(
+      kind,
+      continuationToken,
+    );
+  }
 
   @Post('sign-upload')
   signUpload(@Body() input: SignR2UploadDto) {
@@ -64,13 +85,19 @@ export class R2AudioController {
   }
 
   @Get('preview')
-  async preview(@Query('reference') reference: string) {
+  async preview(
+    @Query('reference') reference: string,
+  ) {
     if (!reference?.startsWith('r2://')) {
-      throw new BadRequestException('Invalid audio reference');
+      throw new BadRequestException(
+        'Invalid audio reference',
+      );
     }
 
     return {
-      url: await this.storage.resolvePlaybackUrl(reference),
+      url: await this.storage.resolvePlaybackUrl(
+        reference,
+      ),
     };
   }
 }
