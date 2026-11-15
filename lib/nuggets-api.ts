@@ -1,5 +1,5 @@
 import { withBibleGroup } from "@/lib/bible-books";
-import { API_URL } from "@/lib/api";
+import { API_URL, fetchWithRetry } from "@/lib/api";
 import type { Nugget } from "@/types/nugget";
 
 type NuggetsApiResponse = {
@@ -135,7 +135,7 @@ export async function getPublishedNuggetsWithAccess(
   let page = 1;
   let premium = false;
   while (true) {
-    const response = await fetch(`${API_URL}/nuggets?limit=100&page=${page}`, {
+    const response = await fetchWithRetry(`${API_URL}/nuggets?limit=100&page=${page}`, {
       cache: "no-store",
       headers,
     });
