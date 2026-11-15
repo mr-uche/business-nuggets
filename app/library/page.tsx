@@ -188,17 +188,35 @@ function LibraryContent() {
       try {
         setLoading(true);
 
-        const [data, taxonomy, savedCollections] = await Promise.all([getPublishedNuggetsWithAccess(), getTopicCatalog(), getCollections().catch(() => {
-          if (mounted) setCollectionsError("Collections could not be loaded. Please refresh the page to try again.");
-          return [];
-        })]);
+        // Nuggets are the primary Library content. Load them independently so
+        // a temporary taxonomy/collections failure cannot hide the nuggets.
+        const [data, taxonomyResult, collectionsResult] = await Promise.all([
+          getPublishedNuggetsWithAccess(),
+          getTopicCatalog().then(value => ({ ok: true as const, value })).catch(error => ({ ok: false as const, error })),
+          getCollections().then(value => ({ ok: true as const, value })).catch(error => ({ ok: false as const, error })),
+        ]);
 
         if (!mounted) return;
 
         setApiNuggets(data.nuggets);
         setPremiumAccess(data.premium);
-        setCatalog(taxonomy);
-        setCollections(savedCollections);
+
+        if (taxonomyResult.ok) {
+          setCatalog(taxonomyResult.value);
+        } else {
+          console.error("Could not load topic catalogue:", taxonomyResult.error);
+          setCatalog({ topics: [], categories: [] });
+        }
+
+        if (collectionsResult.ok) {
+          setCollections(collectionsResult.value);
+          setCollectionsError("");
+        } else {
+          console.error("Could not load collections:", collectionsResult.error);
+          setCollections([]);
+          setCollectionsError("Collections could not be loaded. Please try again later.");
+        }
+
         setError("");
       } catch (err) {
         console.error(
