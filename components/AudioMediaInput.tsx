@@ -4,9 +4,11 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ChangeEvent,
 } from "react";
+
 import { adminApiFetch } from "@/lib/admin-api";
 import {
   mediaUrl,
@@ -30,6 +32,7 @@ type R2ListResponse = {
 type Props = {
   value: string;
   onChange: (value: string) => void;
+  onDurationDetected?: (duration: string) => void;
   label?: string;
   bucket: Bucket;
 };
@@ -43,6 +46,7 @@ function formatSize(bytes: number) {
 export default function AudioMediaInput({
   value,
   onChange,
+  onDurationDetected,
   label = "Audio URL",
   bucket,
 }: Props) {
@@ -57,6 +61,41 @@ export default function AudioMediaInput({
   const [nextToken, setNextToken] =
     useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  const pendingDurationReference = useRef<string | null>(null);
+
+  function selectAudioReference(reference: string) {
+    pendingDurationReference.current = reference;
+    onChange(reference);
+  }
+
+  function handleAudioMetadata(
+    event: React.SyntheticEvent<HTMLAudioElement>,
+  ) {
+    if (pendingDurationReference.current !== value) {
+      return;
+    }
+
+    const seconds = event.currentTarget.duration;
+
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+      return;
+    }
+
+    const totalSeconds = Math.round(seconds);
+    const minutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = totalSeconds % 60;
+
+    const formattedDuration =
+      minutes > 0
+        ? `${minutes} min${remainingSeconds ? ` ${remainingSeconds} sec` : ""}`
+        : `${remainingSeconds} sec`;
+
+    pendingDurationReference.current = null;
+
+    onDurationDetected?.(formattedDuration);
+  }
+
 
   const visibleFiles = useMemo(
     () =>
@@ -166,7 +205,7 @@ export default function AudioMediaInput({
   }
 
   function selectR2File(file: R2File) {
-    onChange(file.reference);
+    selectAudioReference(file.reference);
     setBrowserOpen(false);
     setError("");
     setMessage(
@@ -248,7 +287,7 @@ export default function AudioMediaInput({
         ),
       );
 
-      onChange(completed.reference);
+      selectAudioReference(completed.reference);
       setMessage("MP3 uploaded successfully.");
     } catch (cause) {
       setError(
@@ -393,15 +432,19 @@ export default function AudioMediaInput({
         </p>
       )}
 
+      
       {previewUrl && (
         <audio
+          key={value}
           controls
-          preload="none"
+          preload="metadata"
           src={previewUrl}
+          onLoadedMetadata={handleAudioMetadata}
           className="w-full"
           aria-label={`${label} preview`}
         />
       )}
+
     </div>
   );
 }

@@ -72,7 +72,7 @@ const initialForm: FormState = {
   keyPrinciple: "",
   details: "",
   marketplaceApplication: "",
-  duration: "5 min",
+  duration: "",
   isGold: false,
   book: "",
   bibleSection: "",
@@ -734,10 +734,30 @@ export default function NewNuggetPage() {
                 </div>
 
                 <Field label="Song URL (optional)" className="lg:col-span-2">
-                  <AudioMediaInput label="Song URL" bucket="song" value={form.audioUrl} onChange={value => updateField("audioUrl", value)} />
+                  <AudioMediaInput
+                    label="Song URL"
+                    bucket="song"
+                    value={form.audioUrl}
+                    onChange={(value) => updateField("audioUrl", value)}
+                    onDurationDetected={(duration) => {
+                      setForm((current) =>
+                        current.nuggetAudioUrl
+                        ? current
+                        : { ...current, duration },
+                      );
+                    }}
+                  />
                 </Field>
                 <Field label="Nugget URL (optional)" className="lg:col-span-2">
-                  <AudioMediaInput label="Nugget URL" bucket="nuggets" value={form.nuggetAudioUrl} onChange={value => updateField("nuggetAudioUrl", value)} />
+                  <AudioMediaInput
+                    label="Nugget URL"
+                    bucket="nuggets"
+                    value={form.nuggetAudioUrl}
+                    onChange={(value) => updateField("nuggetAudioUrl", value)}
+                    onDurationDetected={(duration) =>
+                      updateField("duration", duration)
+                    }
+                  />
                 </Field>
               </div>
             </FormSection>
