@@ -1,4 +1,3 @@
-
 import {
   BadGatewayException,
   BadRequestException,
@@ -63,8 +62,7 @@ export class R2AudioService {
     return name;
   }
 
-  // Support existing filenames and folder paths.
-  // Preserve exact case because R2 object keys are case-sensitive.
+  // Keep the existing R2 key's original case, including folder paths.
   private validAudioKey(key: string): boolean {
     return (
       Buffer.byteLength(key, 'utf8') <= 1024 &&
@@ -94,11 +92,73 @@ export class R2AudioService {
     };
   }
 
+  // Search by the numbering convention used for Business Nuggets songs.
+  // This is intentionally a root-level, case-sensitive R2 prefix lookup.
+  async matchSongByNumber(number: number) {
+    if (!Number.isSafeInteger(number) || number < 1) {
+      throw new BadRequestException('Invalid Nugget number');
+    }
+
+    const prefix = `BN ${String(number).padStart(4, '0')}`;
+
+    try {
+      const result = await this.client().send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket('song'),
+          Prefix: prefix,
+          MaxKeys: 1000,
+        }),
+      );
+
+      const matches = (result.Contents ?? [])
+        .filter((object) => {
+          const key = object.Key;
+
+          if (!key || !this.validAudioKey(key) || (object.Size ?? 0) <= 0) {
+            return false;
+          }
+
+          const filename = key.split('/').pop() ?? '';
+          const match = /^BN\s+0*(\d+)(?=[\s._-]|$)/i.exec(filename);
+
+          return match !== null && Number(match[1]) === number;
+        })
+        .map((object) => ({
+          name: object.Key as string,
+          reference: `r2://song/${object.Key as string}`,
+        }));
+
+      // Never auto-assign if there are multiple matches or the result is
+      // incomplete. The admin can then select the file manually.
+      if (result.IsTruncated || matches.length > 1) {
+        return { status: 'multiple', matches };
+      }
+
+      if (matches.length === 0) {
+        return { status: 'not_found', matches: [] };
+      }
+
+      return {
+        status: 'matched',
+        reference: matches[0].reference,
+        matches,
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ServiceUnavailableException
+      ) {
+        throw error;
+      }
+
+      // Keep underlying provider details out of HTTP responses.
+      console.error('R2 song auto-match failed:', error);
+      throw new BadGatewayException('Could not match a song in R2');
+    }
+  }
+
   // List existing MP3 objects without uploading or copying them.
-  async listFiles(
-    kind: R2AudioKind,
-    continuationToken?: string,
-  ) {
+  async listFiles(kind: R2AudioKind, continuationToken?: string) {
     if (kind !== 'song' && kind !== 'nuggets') {
       throw new BadRequestException('Invalid R2 audio bucket');
     }
@@ -147,17 +207,11 @@ export class R2AudioService {
         throw error;
       }
 
-      throw new BadGatewayException(
-        'Could not list audio files in R2',
-      );
+      throw new BadGatewayException('Could not list audio files in R2');
     }
   }
 
-  async signUpload(
-    kind: R2AudioKind,
-    filename: string,
-    size: number,
-  ) {
+  async signUpload(kind: R2AudioKind, filename: string, size: number) {
     if (
       (kind !== 'song' && kind !== 'nuggets') ||
       !/\.mp3$/i.test(filename) ||
@@ -195,21 +249,13 @@ export class R2AudioService {
 
     try {
       const result = await this.client().send(
-        new HeadObjectCommand({
-          Bucket: bucket,
-          Key: key,
-        }),
+        new HeadObjectCommand({ Bucket: bucket, Key: key }),
       );
 
       const size = Number(result.ContentLength ?? 0);
-      const contentType =
-        result.ContentType?.split(';')[0].trim();
+      const contentType = result.ContentType?.split(';')[0].trim();
 
-      if (
-        size < 1 ||
-        size > MAX_AUDIO_SIZE ||
-        contentType !== 'audio/mpeg'
-      ) {
+      if (size < 1 || size > MAX_AUDIO_SIZE || contentType !== 'audio/mpeg') {
         throw new BadRequestException(
           'Uploaded file must be an MP3 no larger than 50 MB',
         );
@@ -224,9 +270,7 @@ export class R2AudioService {
       );
 
       const bytes = sample.Body
-        ? Buffer.from(
-            await sample.Body.transformToByteArray(),
-          )
+        ? Buffer.from(await sample.Body.transformToByteArray())
         : Buffer.alloc(0);
 
       if (detectMediaMime(bytes) !== 'audio/mpeg') {
@@ -247,9 +291,7 @@ export class R2AudioService {
     }
   }
 
-  async resolvePlaybackUrl(
-    reference: string | null | undefined,
-  ) {
+  async resolvePlaybackUrl(reference: string | null | undefined) {
     if (!reference || !reference.startsWith('r2://')) {
       return reference ?? null;
     }
@@ -258,10 +300,7 @@ export class R2AudioService {
 
     return getSignedUrl(
       this.client(),
-      new GetObjectCommand({
-        Bucket: bucket,
-        Key: key,
-      }),
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
       { expiresIn: 3600 },
     );
   }

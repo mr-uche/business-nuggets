@@ -1,9 +1,9 @@
-
 import {
   BadRequestException,
   Body,
   Controller,
   Get,
+  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -55,19 +55,19 @@ class CompleteR2UploadDto {
 )
 @RequireAdminPermission('manageNuggets')
 export class R2AudioController {
-  constructor(
-    private readonly storage: R2AudioService,
-  ) {}
+  constructor(private readonly storage: R2AudioService) {}
 
   @Get('files')
   listFiles(
     @Query('kind') kind: R2AudioKind,
     @Query('continuationToken') continuationToken?: string,
   ) {
-    return this.storage.listFiles(
-      kind,
-      continuationToken,
-    );
+    return this.storage.listFiles(kind, continuationToken);
+  }
+
+  @Get('match-song')
+  matchSong(@Query('number', ParseIntPipe) number: number) {
+    return this.storage.matchSongByNumber(number);
   }
 
   @Post('sign-upload')
@@ -85,19 +85,13 @@ export class R2AudioController {
   }
 
   @Get('preview')
-  async preview(
-    @Query('reference') reference: string,
-  ) {
+  async preview(@Query('reference') reference: string) {
     if (!reference?.startsWith('r2://')) {
-      throw new BadRequestException(
-        'Invalid audio reference',
-      );
+      throw new BadRequestException('Invalid audio reference');
     }
 
     return {
-      url: await this.storage.resolvePlaybackUrl(
-        reference,
-      ),
+      url: await this.storage.resolvePlaybackUrl(reference),
     };
   }
 }

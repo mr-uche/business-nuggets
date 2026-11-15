@@ -4,6 +4,7 @@ import { BIBLE_BOOKS, BIBLE_GROUPS, referenceWithBook, bibleGroupForBook, bibleB
 
 import ImageMediaPicker from "@/components/ImageMediaPicker";
 import AudioMediaInput from "@/components/AudioMediaInput";
+import { useR2SongAutoMatch } from "@/lib/use-r2-song-auto-match";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -166,6 +167,20 @@ export default function EditNuggetPage() {
 
   const [success, setSuccess] =
     useState("");
+
+  // Match the existing Nugget number only after its record is loaded.
+  // Never replace a Song URL that already exists.
+  const songMatchStatus = useR2SongAutoMatch(
+    originalNugget?.number,
+    form.audioUrl,
+    (reference) => {
+      setForm((current) =>
+        current.audioUrl.trim()
+          ? current
+          : { ...current, audioUrl: reference },
+      );
+    },
+  );
 
   /* =========================================
      LOAD NUGGET
@@ -1033,6 +1048,7 @@ export default function EditNuggetPage() {
                 bucket="song"
                 value={form.audioUrl}
                 onChange={(value) => updateField("audioUrl", value)}
+                detectDurationForValue={!form.duration.trim() && !form.nuggetAudioUrl.trim()}
                 onDurationDetected={(duration) => {
                   setForm((current) =>
                     current.nuggetAudioUrl
@@ -1041,6 +1057,18 @@ export default function EditNuggetPage() {
                   );
                 }}
               />
+              {songMatchStatus === "searching" && (
+                <p className="mt-2 text-xs text-white/50">Searching R2 for this Nugget's song...</p>
+              )}
+              {songMatchStatus === "multiple" && (
+                <p className="mt-2 text-xs text-[#E28906]">Multiple songs match this number. Choose the correct song manually.</p>
+              )}
+              {songMatchStatus === "not_found" && (
+                <p className="mt-2 text-xs text-white/40">No matching song found in R2.</p>
+              )}
+              {songMatchStatus === "error" && (
+                <p className="mt-2 text-xs text-red-400">Could not search R2. Choose the song manually.</p>
+              )}
             </div>
 
             <div className="mt-4">

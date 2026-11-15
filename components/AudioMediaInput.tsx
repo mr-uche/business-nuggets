@@ -33,6 +33,7 @@ type Props = {
   value: string;
   onChange: (value: string) => void;
   onDurationDetected?: (duration: string) => void;
+  detectDurationForValue?: boolean;
   label?: string;
   bucket: Bucket;
 };
@@ -47,6 +48,7 @@ export default function AudioMediaInput({
   value,
   onChange,
   onDurationDetected,
+  detectDurationForValue = false,
   label = "Audio URL",
   bucket,
 }: Props) {
@@ -63,6 +65,13 @@ export default function AudioMediaInput({
   const [search, setSearch] = useState("");
 
   const pendingDurationReference = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Only newly matched songs with an empty duration opt into auto-detection.
+    if (detectDurationForValue && value) {
+      pendingDurationReference.current = value;
+    }
+  }, [detectDurationForValue, value]);
 
   function selectAudioReference(reference: string) {
     pendingDurationReference.current = reference;

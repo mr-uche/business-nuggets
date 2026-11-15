@@ -32,6 +32,7 @@ import {
 import AdminShell from "@/components/admin/AdminShell";
 import { API_URL } from "@/lib/api";
 import { BIBLE_BOOKS, BIBLE_GROUPS, referenceWithBook, bibleGroupForBook, bibleBookFromReference } from "@/lib/bible-books";
+import { useR2SongAutoMatch } from "@/lib/use-r2-song-auto-match";
 
 const bibleSections = BIBLE_GROUPS.map(group => group.name);
 
@@ -104,6 +105,23 @@ export default function NewNuggetPage() {
   const [success, setSuccess] = useState("");
 
   const slug = slugify(form.title);
+
+
+  const songMatchStatus = useR2SongAutoMatch(
+    form.number,
+    form.audioUrl,
+    (reference) => {
+      setForm((current) =>
+        current.audioUrl.trim()
+          ? current
+          : {
+              ...current,
+              audioUrl: reference,
+            },
+      );
+    },
+  );
+
 
   function getToken() {
     return (
@@ -618,6 +636,18 @@ export default function NewNuggetPage() {
                   <p className="mt-2 text-[12px] text-white/25">
                     It will appear as BN: {form.number || "---"}
                   </p>
+                  {songMatchStatus === "searching" && (
+                    <p className="mt-2 text-xs text-white/50">Searching R2 for its song...</p>
+                  )}
+                  {songMatchStatus === "multiple" && (
+                    <p className="mt-2 text-xs text-[#E28906]">Multiple matches found. Select the correct song using Browse R2 Files.</p>
+                  )}
+                  {songMatchStatus === "not_found" && (
+                    <p className="mt-2 text-xs text-white/40">No matching song found. You can choose one manually.</p>
+                  )}
+                  {songMatchStatus === "error" && (
+                    <p className="mt-2 text-xs text-red-400">Could not search R2. Choose a song manually.</p>
+                  )}
                 </Field>
 
                 <Field label="Tag" required>
@@ -739,6 +769,7 @@ export default function NewNuggetPage() {
                     bucket="song"
                     value={form.audioUrl}
                     onChange={(value) => updateField("audioUrl", value)}
+                    detectDurationForValue={!form.duration.trim() && !form.nuggetAudioUrl.trim()}
                     onDurationDetected={(duration) => {
                       setForm((current) =>
                         current.nuggetAudioUrl
