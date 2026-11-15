@@ -591,18 +591,39 @@ export class SubscriptionsService {
       );
     }
 
+    
     await this.ensurePlanAccessPolicy(plan);
-    if (input.maxNuggets !== undefined || input.accessDurationHours !== undefined || input.quotaWindowHours !== undefined) {
+
+    if (input.maxNuggets !== undefined) {
       await db.runtime().execute(db.raw.sql`
         UPDATE "SubscriptionAccessPolicy"
         SET
-          "maxNuggets" = COALESCE(${input.maxNuggets ?? null}, "maxNuggets"),
-          "accessDurationHours" = COALESCE(${input.accessDurationHours ?? null}, "accessDurationHours"),
-          "quotaWindowHours" = COALESCE(${input.quotaWindowHours ?? null}, "quotaWindowHours"),
+          "maxNuggets" = ${input.maxNuggets},
           "updatedAt" = NOW()
         WHERE "planSlug" = ${plan.slug}
       `.affectedCount().build());
     }
+
+    if (input.accessDurationHours !== undefined) {
+      await db.runtime().execute(db.raw.sql`
+        UPDATE "SubscriptionAccessPolicy"
+        SET
+          "accessDurationHours" = ${input.accessDurationHours},
+          "updatedAt" = NOW()
+        WHERE "planSlug" = ${plan.slug}
+      `.affectedCount().build());
+    }
+
+    if (input.quotaWindowHours !== undefined) {
+      await db.runtime().execute(db.raw.sql`
+        UPDATE "SubscriptionAccessPolicy"
+        SET
+          "quotaWindowHours" = ${input.quotaWindowHours},
+          "updatedAt" = NOW()
+        WHERE "planSlug" = ${plan.slug}
+      `.affectedCount().build());
+    }
+
 
     const policies = await this.getAccessPolicies();
     const policy = policies.find(item => item.planSlug === plan.slug);
