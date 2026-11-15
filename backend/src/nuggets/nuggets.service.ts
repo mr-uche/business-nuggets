@@ -64,6 +64,178 @@ export class NuggetsService {
     );
   }
 
+  private accessTables?: Promise<void>;
+
+  private ensureAccessTables() {
+    if (!this.accessTables) {
+      this.accessTables = (async () => {
+        await db.runtime().execute(db.raw.sql`
+          CREATE TABLE IF NOT EXISTS "SubscriptionAccessPolicy" (
+            "planSlug" text PRIMARY KEY,
+            "maxNuggets" integer NOT NULL DEFAULT 1 CHECK ("maxNuggets" >= 1),
+            "accessDurationHours" integer NOT NULL DEFAULT 24 CHECK ("accessDurationHours" BETWEEN 1 AND 8760),
+            "quotaWindowHours" integer NOT NULL DEFAULT 24 CHECK ("quotaWindowHours" BETWEEN 1 AND 8760),
+            "updatedAt" timestamptz NOT NULL DEFAULT NOW()
+          )
+        `.affectedCount().build());
+        await db.runtime().execute(db.raw.sql`
+          CREATE TABLE IF NOT EXISTS "NuggetAccessSession" (
+            "userId" integer PRIMARY KEY,
+            "startedAt" timestamptz NOT NULL,
+            "expiresAt" timestamptz NOT NULL
+          )
+        `.affectedCount().build());
+        await db.runtime().execute(db.raw.sql`
+          CREATE TABLE IF NOT EXISTS "NuggetAccessGrant" (
+            "id" bigserial PRIMARY KEY,
+            "userId" integer NOT NULL,
+            "nuggetId" text NOT NULL,
+            "openedAt" timestamptz NOT NULL DEFAULT NOW(),
+            "expiresAt" timestamptz NOT NULL,
+            UNIQUE ("userId", "nuggetId")
+          )
+        `.affectedCount().build());
+        await db.runtime().execute(db.raw.sql`
+          CREATE INDEX IF NOT EXISTS "NuggetAccessGrant_user_opened_idx"
+          ON "NuggetAccessGrant" ("userId", "openedAt")
+        `.affectedCount().build());
+      })().catch(error => {
+        this.accessTables = undefined;
+        throw error;
+      });
+    }
+    return this.accessTables;
+  }
+
+  private async getAccessContext(userId: number) {
+    await this.ensureAccessTables();
+    const user = await db.orm.public.User.where({ id: userId }).first();
+    if (!user) throw new ForbiddenException("A valid account is required to open this nugget.");
+
+    const isAdmin = user.role === "owner" || Boolean(user.adminRole);
+    const planSlug = user.subscriptionStatus === "active" && user.subscriptionPlan
+      ? user.subscriptionPlan
+      : "free";
+
+    let policies = await db.runtime().query(db.raw.sql`
+      SELECT "maxNuggets", "accessDurationHours", "quotaWindowHours"
+      FROM "SubscriptionAccessPolicy"
+      WHERE "planSlug" = ${planSlug}
+      LIMIT 1
+    `.returnsRow({
+      maxNuggets: "pg/int4@1",
+      accessDurationHours: "pg/int4@1",
+      quotaWindowHours: "pg/int4@1",
+    }).build());
+
+    if (!policies.length) {
+      const maxNuggets = planSlug === "free" ? 1 : 5;
+      await db.runtime().execute(db.raw.sql`
+        INSERT INTO "SubscriptionAccessPolicy"
+          ("planSlug", "maxNuggets", "accessDurationHours", "quotaWindowHours")
+        VALUES (${planSlug}, ${maxNuggets}, 24, 24)
+        ON CONFLICT ("planSlug") DO NOTHING
+      `.affectedCount().build());
+      policies = await db.runtime().query(db.raw.sql`
+        SELECT "maxNuggets", "accessDurationHours", "quotaWindowHours"
+        FROM "SubscriptionAccessPolicy"
+        WHERE "planSlug" = ${planSlug}
+        LIMIT 1
+      `.returnsRow({
+        maxNuggets: "pg/int4@1",
+        accessDurationHours: "pg/int4@1",
+        quotaWindowHours: "pg/int4@1",
+      }).build());
+    }
+
+    return {
+      user,
+      isAdmin,
+      policy: policies[0] ?? { maxNuggets: 1, accessDurationHours: 24, quotaWindowHours: 24 },
+    };
+  }
+
+  private async getUserGrants(userId: number) {
+    await this.ensureAccessTables();
+    return db.runtime().query(db.raw.sql`
+      SELECT "nuggetId", "openedAt", "expiresAt"
+      FROM "NuggetAccessGrant"
+      WHERE "userId" = ${userId}
+    `.returnsRow({
+      nuggetId: "pg/text@1",
+      openedAt: "pg/timestamptz-string@1",
+      expiresAt: "pg/timestamptz-string@1",
+    }).build());
+  }
+
+  private async getUserAccessSession(userId: number) {
+    await this.ensureAccessTables();
+    const rows = await db.runtime().query(db.raw.sql`
+      SELECT "startedAt", "expiresAt"
+      FROM "NuggetAccessSession"
+      WHERE "userId" = ${userId}
+      LIMIT 1
+    `.returnsRow({
+      startedAt: "pg/timestamptz-string@1",
+      expiresAt: "pg/timestamptz-string@1",
+    }).build());
+    return rows[0] ?? null;
+  }
+
+  private async openNuggetAccess(userId: number, nuggetId: string, policy: {
+    maxNuggets: number;
+    accessDurationHours: number;
+    quotaWindowHours: number;
+  }) {
+    const now = new Date();
+    let session = await this.getUserAccessSession(userId);
+
+    // A new batch begins only when the user opens their first nugget
+    // after the previous shared access period has expired.
+    if (!session || new Date(session.expiresAt).getTime() <= now.getTime()) {
+      const expiresAt = new Date(now.getTime() + policy.accessDurationHours * 60 * 60 * 1000);
+      await db.runtime().execute(db.raw.sql`
+        INSERT INTO "NuggetAccessSession" ("userId", "startedAt", "expiresAt")
+        VALUES (${userId}, ${now.toISOString()}, ${expiresAt.toISOString()})
+        ON CONFLICT ("userId") DO UPDATE SET
+          "startedAt" = EXCLUDED."startedAt",
+          "expiresAt" = EXCLUDED."expiresAt"
+      `.affectedCount().build());
+      session = { startedAt: now.toISOString(), expiresAt: expiresAt.toISOString() };
+    }
+
+    const grants = await this.getUserGrants(userId);
+    const selected = grants.filter(grant =>
+      new Date(grant.openedAt).getTime() >= new Date(session!.startedAt).getTime()
+    );
+    const existing = selected.find(grant => grant.nuggetId === nuggetId);
+
+    if (existing) {
+      return { openedAt: session.startedAt, expiresAt: session.expiresAt };
+    }
+
+    if (selected.length >= policy.maxNuggets) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        code: "NUGGET_QUOTA_REACHED",
+        message: `You have selected all ${policy.maxNuggets} nuggets available in this ${policy.accessDurationHours}-hour access period.`,
+        maxNuggets: policy.maxNuggets,
+        accessDurationHours: policy.accessDurationHours,
+        nextAvailableAt: session.expiresAt,
+      });
+    }
+
+    await db.runtime().execute(db.raw.sql`
+      INSERT INTO "NuggetAccessGrant" ("userId", "nuggetId", "openedAt", "expiresAt")
+      VALUES (${userId}, ${nuggetId}, ${session.startedAt}, ${session.expiresAt})
+      ON CONFLICT ("userId", "nuggetId") DO UPDATE SET
+        "openedAt" = EXCLUDED."openedAt",
+        "expiresAt" = EXCLUDED."expiresAt"
+    `.affectedCount().build());
+
+    return { openedAt: session.startedAt, expiresAt: session.expiresAt };
+  }
+
   private toLockedPreview<
     T extends {
       number: number;
@@ -148,6 +320,78 @@ export class NuggetsService {
           );
         },
       );
+
+    let accessSummary: Record<string, unknown> = {
+      maxNuggets: null,
+      accessDurationHours: null,
+      quotaWindowHours: null,
+      used: 0,
+      remaining: null,
+    };
+
+    if (userId) {
+      const context = await this.getAccessContext(userId);
+      if (!context.isAdmin) {
+        const grants = await this.getUserGrants(userId);
+        const session = await this.getUserAccessSession(userId);
+        const now = Date.now();
+        const sessionActive = Boolean(session && new Date(session.expiresAt).getTime() > now);
+        const selectedGrants = sessionActive
+          ? grants.filter(grant => new Date(grant.openedAt).getTime() >= new Date(session!.startedAt).getTime())
+          : [];
+        const usedIds = new Set(selectedGrants.map(grant => grant.nuggetId));
+        const grantByNugget = new Map(selectedGrants.map(grant => [grant.nuggetId, grant]));
+
+        nuggets = nuggets.map((nugget: any) => {
+          if (nugget.isGold && !premium) {
+            return { ...nugget, accessLocked: true, accessAvailable: false, accessReason: "PREMIUM_REQUIRED" };
+          }
+
+          const grant = grantByNugget.get(nugget.id);
+          const active = Boolean(sessionActive && grant);
+          const canOpen = !active && usedIds.size < context.policy.maxNuggets;
+
+          if (active) {
+            return {
+              ...nugget,
+              locked: false,
+              accessLocked: false,
+              accessAvailable: true,
+              accessExpiresAt: session?.expiresAt ?? null,
+            };
+          }
+
+          return {
+            ...nugget,
+            locked: true,
+            accessLocked: true,
+            accessAvailable: canOpen,
+            accessReason: session && !sessionActive
+              ? "ACCESS_PERIOD_EXPIRED"
+              : canOpen ? "OPEN_TO_START" : "NUGGET_QUOTA_REACHED",
+            accessAvailableAt: sessionActive ? session?.expiresAt ?? null : null,
+            accessExpiresAt: null,
+            scriptureText: "",
+            keyPrinciple: "",
+            details: "",
+            marketplaceApplication: "",
+            practicalActionPlan: [],
+            audioUrl: null,
+            nuggetAudioUrl: null,
+          };
+        });
+
+        accessSummary = {
+          maxNuggets: context.policy.maxNuggets,
+          accessDurationHours: context.policy.accessDurationHours,
+          quotaWindowHours: context.policy.accessDurationHours,
+          startedAt: sessionActive ? session?.startedAt : null,
+          expiresAt: sessionActive ? session?.expiresAt : null,
+          used: usedIds.size,
+          remaining: Math.max(0, context.policy.maxNuggets - usedIds.size),
+        };
+      }
+    }
 
     /* =========================================================
        SEARCH
@@ -398,6 +642,7 @@ export class NuggetsService {
       access: {
         premium,
         freeLimit: null,
+        ...accessSummary,
       },
 
       pagination: {
@@ -450,6 +695,18 @@ export class NuggetsService {
         code: "PREMIUM_REQUIRED",
         message: "This Business Nugget is available to Premium members.",
       });
+    }
+
+    if (userId) {
+      const context = await this.getAccessContext(userId);
+      if (!context.isAdmin) {
+        const access = await this.openNuggetAccess(userId, nugget.id, context.policy);
+        return {
+          ...nugget,
+          accessExpiresAt: access.expiresAt,
+          accessDurationHours: context.policy.accessDurationHours,
+        };
+      }
     }
 
     return nugget;

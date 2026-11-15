@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/api";
+import { API_URL, fetchWithRetry } from "@/lib/api";
 
 export type PublicTopic = {
   id: number;
@@ -19,7 +19,7 @@ export type PublicCategory = {
 export type TopicCatalog = { topics: PublicTopic[]; categories: PublicCategory[] };
 
 export async function getTopicCatalog(): Promise<TopicCatalog> {
-  const response = await fetch(`${API_URL}/topics/catalog`, { cache: "no-store" });
+  const response = await fetchWithRetry(`${API_URL}/topics/catalog`, { cache: "no-store" });
   if (!response.ok) throw new Error("Could not load topics and categories.");
   const data: TopicCatalog = await response.json();
   if (!Array.isArray(data.topics) || !Array.isArray(data.categories))

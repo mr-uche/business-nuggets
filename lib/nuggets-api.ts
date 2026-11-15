@@ -1,5 +1,5 @@
 import { withBibleGroup } from "@/lib/bible-books";
-import { API_URL } from "@/lib/api";
+import { API_URL, fetchWithRetry } from "@/lib/api";
 import type { Nugget } from "@/types/nugget";
 
 type NuggetsApiResponse = {
@@ -28,6 +28,18 @@ export class PremiumRequiredError extends Error {
     super(message);
     this.name =
       "PremiumRequiredError";
+  }
+}
+
+export class NuggetAccessError extends Error {
+  code: string;
+  nextAvailableAt?: string | null;
+
+  constructor(message: string, code: string, nextAvailableAt?: string | null) {
+    super(message);
+    this.name = "NuggetAccessError";
+    this.code = code;
+    this.nextAvailableAt = nextAvailableAt;
   }
 }
 
@@ -73,7 +85,7 @@ function normalizeFeed(
     .map(withBibleGroup)
     .map(
       (nugget) =>
-        premium
+        premium && !nugget.accessLocked
           ? {
               ...nugget,
               isGold: false,
@@ -123,7 +135,7 @@ export async function getPublishedNuggetsWithAccess(
   let page = 1;
   let premium = false;
   while (true) {
-    const response = await fetch(`${API_URL}/nuggets?limit=100&page=${page}`, {
+    const response = await fetchWithRetry(`${API_URL}/nuggets?limit=100&page=${page}`, {
       cache: "no-store",
       headers,
     });
@@ -175,6 +187,14 @@ export async function getNuggetBySlugFromApi(
     ) {
       throw new PremiumRequiredError(
         data.message,
+      );
+    }
+
+    if (data?.code === "NUGGET_QUOTA_REACHED" || data?.code === "NUGGET_ACCESS_EXPIRED") {
+      throw new NuggetAccessError(
+        data.message || "This nugget is not currently available.",
+        data.code,
+        data.nextAvailableAt,
       );
     }
   }

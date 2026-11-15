@@ -174,6 +174,8 @@ function LibraryContent() {
   const upgradeDialog = useRef<HTMLDialogElement>(null);
 
   const [loading, setLoading] = useState(true);
+  const [clockNow, setClockNow] = useState(0);
+  const expiredSessionRefresh = useRef<string | null>(null);
   const [error, setError] = useState("");
 
   const [bookQuery, setBookQuery] =
@@ -186,17 +188,35 @@ function LibraryContent() {
       try {
         setLoading(true);
 
-        const [data, taxonomy, savedCollections] = await Promise.all([getPublishedNuggetsWithAccess(), getTopicCatalog(), getCollections().catch(() => {
-          if (mounted) setCollectionsError("Collections could not be loaded. Please refresh the page to try again.");
-          return [];
-        })]);
+        // Nuggets are the primary Library content. Load them independently so
+        // a temporary taxonomy/collections failure cannot hide the nuggets.
+        const [data, taxonomyResult, collectionsResult] = await Promise.all([
+          getPublishedNuggetsWithAccess(),
+          getTopicCatalog().then(value => ({ ok: true as const, value })).catch(error => ({ ok: false as const, error })),
+          getCollections().then(value => ({ ok: true as const, value })).catch(error => ({ ok: false as const, error })),
+        ]);
 
         if (!mounted) return;
 
         setApiNuggets(data.nuggets);
         setPremiumAccess(data.premium);
-        setCatalog(taxonomy);
-        setCollections(savedCollections);
+
+        if (taxonomyResult.ok) {
+          setCatalog(taxonomyResult.value);
+        } else {
+          console.error("Could not load topic catalogue:", taxonomyResult.error);
+          setCatalog({ topics: [], categories: [] });
+        }
+
+        if (collectionsResult.ok) {
+          setCollections(collectionsResult.value);
+          setCollectionsError("");
+        } else {
+          console.error("Could not load collections:", collectionsResult.error);
+          setCollections([]);
+          setCollectionsError("Collections could not be loaded. Please try again later.");
+        }
+
         setError("");
       } catch (err) {
         console.error(
@@ -222,6 +242,32 @@ function LibraryContent() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    setClockNow(Date.now());
+    const interval = window.setInterval(() => setClockNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const currentBatchExpiry = apiNuggets.find(nugget => nugget.accessExpiresAt)?.accessExpiresAt ?? null;
+
+  useEffect(() => {
+    if (!currentBatchExpiry) return;
+    const expiryTime = new Date(currentBatchExpiry).getTime();
+    if (clockNow < expiryTime || expiredSessionRefresh.current === currentBatchExpiry) return;
+
+    expiredSessionRefresh.current = currentBatchExpiry;
+    let active = true;
+    getPublishedNuggetsWithAccess()
+      .then(data => {
+        if (!active) return;
+        setApiNuggets(data.nuggets);
+        setPremiumAccess(data.premium);
+      })
+      .catch(error => console.error("Could not refresh expired nugget access:", error));
+
+    return () => { active = false; };
+  }, [currentBatchExpiry, clockNow]);
 
   const requestedTab =
     params.get("tab") ?? "";
@@ -721,12 +767,9 @@ function LibraryContent() {
                     {paginatedNuggets.map(
                       (nugget) => (
                         <NuggetCard
-                          key={
-                            nugget.slug
-                          }
-                          nugget={
-                            nugget
-                          }
+                          key={nugget.slug}
+                          nugget={nugget}
+                          now={clockNow}
                         />
                       ),
                     )}
@@ -1351,13 +1394,28 @@ export default function LibraryPage() {
 
 function NuggetCard({
   nugget,
+  now,
 }: {
   nugget: Nugget;
+  now: number;
 }) {
+  const batchExpired = Boolean(nugget.accessExpiresAt && new Date(nugget.accessExpiresAt).getTime() <= now);
+  const unavailable = Boolean(nugget.accessLocked && !nugget.accessAvailable && nugget.accessReason !== "PREMIUM_REQUIRED" && !batchExpired);
+  const countdown = nugget.accessExpiresAt && !batchExpired
+    ? (() => {
+        const seconds = Math.max(0, Math.floor((new Date(nugget.accessExpiresAt!).getTime() - now) / 1000));
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainder = seconds % 60;
+        return [hours, minutes, remainder].map(value => String(value).padStart(2, "0")).join(":");
+      })()
+    : null;
   return (
     <Link
       href={`/nugget/${nugget.slug}`}
-      className="group overflow-hidden rounded-xl border border-white/10 bg-[#111111] transition hover:border-[#E28906]/45"
+      aria-disabled={unavailable}
+      onClick={event => { if (unavailable) event.preventDefault(); }}
+      className={`group overflow-hidden rounded-xl border border-white/10 bg-[#111111] transition ${unavailable ? "cursor-not-allowed opacity-65" : "hover:border-[#E28906]/45"}`}
     >
       <div className="relative h-[165px] overflow-hidden">
         <Image
@@ -1391,12 +1449,28 @@ function NuggetCard({
           {nugget.scriptureRef}
         </p>
 
-        <div className="mt-auto flex items-end justify-between pt-5">
-          <span className="text-[13px] font-medium text-[#E28906]">
-            Listen & Read
+        <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+          <span className="text-[12px] font-medium text-[#E28906]">
+            {nugget.accessReason === "PREMIUM_REQUIRED"
+              ? "Premium required"
+              : nugget.accessReason === "ACCESS_PERIOD_EXPIRED"
+                ? "Previous access period ended · open to start a new batch"
+                : nugget.accessLocked
+                  ? nugget.accessAvailable
+                    ? "Open to start"
+                    : "Plan limit reached"
+                  : batchExpired
+                    ? "Access period ended · open to restart"
+                    : countdown
+                      ? `Access ends in ${countdown}`
+                      : "Listen & Read"}
           </span>
 
-          {nugget.isGold ? (
+          {nugget.accessLocked || batchExpired ? (
+            <span className="rounded border border-white/15 bg-white/[0.04] px-2 py-1 text-[10px] font-semibold text-white/45">
+              {batchExpired ? "EXPIRED" : nugget.accessAvailable ? "UNOPENED" : "LOCKED"}
+            </span>
+          ) : nugget.isGold ? (
             <span className="rounded border border-[#E28906]/40 bg-[#E28906]/10 px-2 py-1 text-[12px] font-semibold text-[#E28906]">
               GOLD
             </span>

@@ -24,6 +24,12 @@ export type Nugget = {
   duration: string;
   isGold: boolean;
   locked?: boolean;
+  accessLocked?: boolean;
+  accessAvailable?: boolean;
+  accessReason?: string;
+  accessExpiresAt?: string | null;
+  accessDurationHours?: number;
+  accessAvailableAt?: string | null;
   book: string;
   bibleSection: BibleSection;
   challenges: string[];
