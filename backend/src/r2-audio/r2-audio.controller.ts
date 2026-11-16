@@ -9,10 +9,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsIn,
   IsInt,
   IsString,
   Matches,
+  MaxLength,
+  ValidateNested,
   Max,
   Min,
 } from 'class-validator';
@@ -26,6 +31,8 @@ import {
 import { AdminIpAllowListGuard } from '../admin/admin-ip-allow-list.guard';
 import { R2AudioService } from './r2-audio.service';
 import type { R2AudioKind } from './r2-audio.service';
+import { R2BulkSongMatchService } from './r2-bulk-song-match.service';
+import { Type } from 'class-transformer';
 
 class SignR2UploadDto {
   @IsIn(['song', 'nuggets'])
@@ -46,6 +53,27 @@ class CompleteR2UploadDto {
   reference: string;
 }
 
+class ApplyR2MatchItemDto {
+  @IsString()
+  @MaxLength(150)
+  @Matches(/^[-a-zA-Z0-9_]+$/)
+  id!: string;
+
+  @IsString()
+  @MaxLength(1200)
+  @Matches(/^r2:\/\/song\/.+\.mp3$/i)
+  reference!: string;
+}
+
+class ApplyR2MatchesDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(500)
+  @ValidateNested({ each: true })
+  @Type(() => ApplyR2MatchItemDto)
+  matches!: ApplyR2MatchItemDto[];
+}
+
 @Controller('admin/r2-audio')
 @UseGuards(
   JwtAuthGuard,
@@ -55,7 +83,10 @@ class CompleteR2UploadDto {
 )
 @RequireAdminPermission('manageNuggets')
 export class R2AudioController {
-  constructor(private readonly storage: R2AudioService) {}
+  constructor(
+    private readonly storage: R2AudioService,
+    private readonly bulkMatcher: R2BulkSongMatchService,
+  ) {}
 
   @Get('files')
   listFiles(
@@ -68,6 +99,16 @@ export class R2AudioController {
   @Get('match-song')
   matchSong(@Query('number', ParseIntPipe) number: number) {
     return this.storage.matchSongByNumber(number);
+  }
+
+  @Post('bulk-match/preview')
+  previewBulkSongMatches() {
+    return this.bulkMatcher.preview();
+  }
+
+  @Post('bulk-match/apply')
+  applyBulkSongMatches(@Body() input: ApplyR2MatchesDto) {
+    return this.bulkMatcher.apply(input.matches);
   }
 
   @Post('sign-upload')

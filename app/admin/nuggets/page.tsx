@@ -24,6 +24,7 @@ import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import { adminApiFetch } from "@/lib/admin-api";
 import AdminImportDialog from "@/components/admin/AdminImportDialog";
 import AdminShell from "@/components/admin/AdminShell";
+import R2BulkSongMatchDialog from "@/components/admin/R2BulkSongMatchDialog";
 import { API_URL } from "@/lib/api";
 
 import type { Nugget } from "@/types/nugget";
@@ -54,6 +55,7 @@ const PAGE_SIZE = 8;
 
 export default function AdminNuggetsPage() {
   const [importOpen, setImportOpen] = useState(false);
+  const [r2BulkMatchOpen, setR2BulkMatchOpen] = useState(false);
   const [importSuccess, setImportSuccess] = useState("");
   const [nuggets, setNuggets] =
     useState<AdminNugget[]>([]);
@@ -520,6 +522,14 @@ export default function AdminNuggetsPage() {
               Import
             </button>
 
+            <button
+              type="button"
+              onClick={() => setR2BulkMatchOpen(true)}
+              className="min-h-9 rounded-md border border-[#E28906]/40 px-4 text-[13px] text-[#E28906] transition hover:bg-white/[0.08]"
+            >
+              Auto-Match R2 Songs
+            </button>
+
             <Link
               href="/admin/nuggets/new"
               className="bn-button inline-flex min-h-9 items-center gap-2 rounded-md bg-[#E28906] px-4 text-[9px] font-semibold text-[#080808] transition hover:bg-[#E28906]"
@@ -532,6 +542,13 @@ export default function AdminNuggetsPage() {
             </Link>
           </div>
         </section>
+
+        {r2BulkMatchOpen && (
+          <R2BulkSongMatchDialog
+            onClose={() => setR2BulkMatchOpen(false)}
+            onApplied={loadNuggets}
+          />
+        )}
 
         {importSuccess && <p role="status" className="mt-5 rounded border border-emerald-500/25 bg-emerald-500/5 p-4 text-sm text-emerald-300">{importSuccess}</p>}
         {/* ERROR */}
