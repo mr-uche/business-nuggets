@@ -1,4 +1,5 @@
 import ReaderStudyNotes from "@/components/ReaderStudyNotes";
+import { displayTopicName } from "@/lib/topic-display";
 import FormattedNuggetText from "@/components/FormattedNuggetText";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -62,7 +63,7 @@ export default async function ReaderViewPage({
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_270px]">
           <article className="min-w-0">
             <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#E28906]">
-              Nugget #{nugget.number} · {nugget.topic}
+              Nugget #{nugget.number} · {displayTopicName(nugget.topic)}
             </p>
 
             <h1 className="bn-hero-title mt-3 max-w-[800px] font-serif text-[40px] leading-[1.05] text-[#15120E]">
@@ -157,7 +158,7 @@ export default async function ReaderViewPage({
       <ReaderAudioBar
         key={`${nugget.slug}-${nugget.nuggetAudioUrl || ""}`}
         title={nugget.title}
-        subtitle={`${nugget.scriptureRef} · ${nugget.topic}`}
+        subtitle={`${nugget.scriptureRef} · ${displayTopicName(nugget.topic)}`}
         slug={nugget.slug}
         coverImage={nugget.image}
         audioSrc={nugget.nuggetAudioUrl || null}
