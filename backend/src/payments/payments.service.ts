@@ -509,9 +509,9 @@ export class PaymentsService {
       );
     }
 
-    const active =
-      expiresAt.getTime() >
-      Date.now();
+    const active = expiresAt.getTime() > Date.now();
+    const grace = !active && Date.now() < expiresAt.getTime() + 3 * 24 * 60 * 60 * 1000;
+    const canReadPaid = active || grace;
 
     const updatedUser =
       await db.orm.public.User
@@ -519,18 +519,9 @@ export class PaymentsService {
           id: userId,
         })
         .update({
-          membershipTier:
-            active
-              ? "premium"
-              : "free",
-          subscriptionPlan:
-            active
-              ? latestPlanSlug
-              : "free",
-          subscriptionStatus:
-            active
-              ? "active"
-              : "expired",
+          membershipTier: canReadPaid ? "premium" : "free",
+          subscriptionPlan: canReadPaid ? latestPlanSlug : "free",
+          subscriptionStatus: active ? "active" : grace ? "grace" : "expired",
           subscriptionExpiresAt:
             expiresAt.toISOString(),
         });
@@ -538,19 +529,13 @@ export class PaymentsService {
     return {
       membershipTier:
         updatedUser?.membershipTier ??
-        (active
-          ? "premium"
-          : "free"),
+        (canReadPaid ? "premium" : "free"),
       subscriptionPlan:
         updatedUser?.subscriptionPlan ??
-        (active
-          ? latestPlanSlug
-          : "free"),
+        (canReadPaid ? latestPlanSlug : "free"),
       subscriptionStatus:
         updatedUser?.subscriptionStatus ??
-        (active
-          ? "active"
-          : "expired"),
+        (active ? "active" : grace ? "grace" : "expired"),
       subscriptionExpiresAt:
         updatedUser?.subscriptionExpiresAt ??
         expiresAt.toISOString(),
