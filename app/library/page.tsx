@@ -1463,7 +1463,7 @@ function NuggetCard({
                   : batchExpired
                     ? "Access period ended · open to restart"
                     : countdown
-                      ? `Access ends in ${countdown}`
+                      ? `${nugget.accessInGrace ? "Reading grace ends in" : "Access ends in"} ${countdown}`
                       : "Listen & Read"}
           </span>
 
