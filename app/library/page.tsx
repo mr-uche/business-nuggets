@@ -249,7 +249,13 @@ function LibraryContent() {
     return () => window.clearInterval(interval);
   }, []);
 
-  const currentBatchExpiry = apiNuggets.find(nugget => nugget.accessExpiresAt)?.accessExpiresAt ?? null;
+  // Restored history can expire at subscription end while current selections
+  // have a different reading deadline. Refresh at the earliest deadline.
+  const currentBatchExpiry = apiNuggets.reduce<string | null>((earliest, nugget) => {
+    const expiry = nugget.accessExpiresAt;
+    if (!expiry) return earliest;
+    return !earliest || Date.parse(expiry) < Date.parse(earliest) ? expiry : earliest;
+  }, null);
 
   useEffect(() => {
     if (!currentBatchExpiry) return;
