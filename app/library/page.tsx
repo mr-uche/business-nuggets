@@ -34,6 +34,7 @@ import {
 import { BIBLE_GROUPS } from "@/lib/bible-books";
 import { getCollections, type PublicCollection } from "@/lib/collections-api";
 import { getPublishedNuggetsWithAccess } from "@/lib/nuggets-api";
+import { libraryPageNumbers } from "@/lib/library-pagination";
 
 import { getTopicCatalog, type TopicCatalog } from "@/lib/topics-api";
 
@@ -826,38 +827,29 @@ function LibraryContent() {
                       />
                     </PageButton>
 
-                    {Array.from(
-                      {
-                        length:
-                          totalPages,
-                      },
-                      (_, index) =>
-                        index + 1,
-                    ).map(
-                      (number) => (
+                    {libraryPageNumbers(totalPages, safePage).map((item, index) =>
+                      item === "ellipsis" ? (
+                        <span
+                          key={`pagination-ellipsis-${index}`}
+                          aria-hidden="true"
+                          className="flex h-9 min-w-7 items-center justify-center text-[13px] text-white/50"
+                        >
+                          …
+                        </span>
+                      ) : (
                         <button
-                          key={
-                            number
-                          }
+                          key={item}
                           type="button"
-                          aria-label={`Page ${number}${number > 2 && !premiumAccess ? ": Premium required" : ""}`}
-                          aria-current={safePage === number ? "page" : undefined}
-                          onClick={() =>
-                            updateParam(
-                              "page",
-                              String(
-                                number,
-                              ),
-                            )
-                          }
+                          aria-label={`Page ${item}${item > 2 && !premiumAccess ? ": Premium required" : ""}`}
+                          aria-current={safePage === item ? "page" : undefined}
+                          onClick={() => updateParam("page", String(item))}
                           className={`flex h-9 w-9 items-center justify-center rounded-md border text-[13px] ${
-                            safePage ===
-                            number
+                            safePage === item
                               ? "border-[#E28906] bg-[#E28906] font-semibold text-[#080808]"
                               : "border-white/10 text-white/50"
                           }`}
                         >
-                          {number}
+                          {item}
                         </button>
                       ),
                     )}
