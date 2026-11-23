@@ -6,6 +6,7 @@ import {
 
 import { db } from "../prisma/db";
 import { hasActivePaidSubscription, restoredPaidHistoryExpiry } from "./paid-history-access";
+import { monthlyNuggetAllowanceExpiry } from "./monthly-nugget-allowance";
 
 import {
   CreateNuggetDto,
@@ -231,10 +232,11 @@ export class NuggetsService {
     const now = new Date();
     let session = await this.getUserAccessSession(userId);
 
-    // A new batch begins only when the user opens their first nugget
-    // after the previous shared access period has expired.
+    // Each selection batch lasts one actual calendar month from the first opening.
+    // The legacy accessDurationHours column is retained for API/schema compatibility
+    // but no longer controls the allowance.
     if (this.sessionNeedsReset(session, context, now.getTime())) {
-      const expiresAt = new Date(now.getTime() + policy.accessDurationHours * 60 * 60 * 1000);
+      const expiresAt = new Date(monthlyNuggetAllowanceExpiry(now.toISOString()));
       await db.runtime().execute(db.raw.sql`
         INSERT INTO "NuggetAccessSession" ("userId", "startedAt", "expiresAt")
         VALUES (${userId}, ${now.toISOString()}, ${expiresAt.toISOString()})
@@ -259,9 +261,9 @@ export class NuggetsService {
       throw new ForbiddenException({
         statusCode: 403,
         code: "NUGGET_QUOTA_REACHED",
-        message: `You have selected all ${policy.maxNuggets} nuggets available in this ${policy.accessDurationHours}-hour access period.`,
+        message: `You have selected all ${policy.maxNuggets} Nuggets in your monthly allowance. You can select new Nuggets when the next monthly period starts.`,
         maxNuggets: policy.maxNuggets,
-        accessDurationHours: policy.accessDurationHours,
+        allowancePeriod: "monthly",
         nextAvailableAt: session.expiresAt,
       });
     }
@@ -435,6 +437,7 @@ export class NuggetsService {
           maxNuggets: context.policy.maxNuggets,
           accessDurationHours: context.policy.accessDurationHours,
           quotaWindowHours: context.policy.quotaWindowHours,
+          allowancePeriod: "monthly",
           startedAt: sessionActive ? session?.startedAt : null,
           expiresAt: sessionActive && session ? this.effectiveAccessExpiry(session.expiresAt, context.user) : null,
           used: usedIds.size,
@@ -760,7 +763,7 @@ export class NuggetsService {
         return {
           ...nugget,
           accessExpiresAt: this.effectiveAccessExpiry(access.expiresAt, context.user),
-          accessDurationHours: context.policy.accessDurationHours,
+          allowancePeriod: "monthly",
         };
       }
     }
