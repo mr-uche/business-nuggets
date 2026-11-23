@@ -15,6 +15,7 @@ import BulkActions from "@/components/admin/BulkActions";
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import AdminImportDialog from "@/components/admin/AdminImportDialog";
 import AdminShell from "@/components/admin/AdminShell";
+import { displayTopicName } from "@/lib/topic-display";
 import { adminApiFetch } from "@/lib/admin-api";
 
 type Kind = "topic" | "category";
@@ -388,7 +389,7 @@ export default function AdminTopicsPage() {
           clear={selection.clear}
           names={items
             .filter((item) => selection.selected.has(String(item.id)))
-            .map((item) => item.name)}
+            .map((item) => kind === "topic" ? displayTopicName(item.name) : item.name)}
           actions={[
             { value: "delete", label: "Delete selected" },
             { value: "show", label: "Make visible" },
@@ -421,14 +422,14 @@ export default function AdminTopicsPage() {
                 <label className="mb-3 inline-flex items-center gap-2 text-[13px] text-white/60">
                   <input
                     type="checkbox"
-                    aria-label={`Select ${item.name}`}
+                    aria-label={`Select ${kind === "topic" ? displayTopicName(item.name) : item.name}`}
                     checked={selection.selected.has(String(item.id))}
                     onChange={() => selection.toggle(String(item.id))}
                     className="h-4 w-4 accent-[#E28906]"
                   />
                   Select
                 </label>
-                <h2 className="font-serif">{item.name}</h2>
+                <h2 className="font-serif">{kind === "topic" ? displayTopicName(item.name) : item.name}</h2>
                 {item.description && (
                   <p className="mt-2 whitespace-pre-line text-sm text-white/40">
                     {item.description}
@@ -475,7 +476,7 @@ export default function AdminTopicsPage() {
                     <button
                       type="button"
                       disabled={busy || topics[0]?.id === item.id}
-                      aria-label={`Move ${item.name} up`}
+                      aria-label={`Move ${displayTopicName(item.name)} up`}
                       onClick={() =>
                         void move(
                           topics.findIndex((topic) => topic.id === item.id),
@@ -489,7 +490,7 @@ export default function AdminTopicsPage() {
                     <button
                       type="button"
                       disabled={busy || topics.at(-1)?.id === item.id}
-                      aria-label={`Move ${item.name} down`}
+                      aria-label={`Move ${displayTopicName(item.name)} down`}
                       onClick={() =>
                         void move(
                           topics.findIndex((topic) => topic.id === item.id),
@@ -519,7 +520,7 @@ export default function AdminTopicsPage() {
                   key={topic.id}
                   className="rounded border border-white/10 bg-[#080808] px-3 py-2 text-[13px] text-white/50"
                 >
-                  {index + 1}. {topic.name}
+                  {index + 1}. {displayTopicName(topic.name)}
                 </span>
               ))}
             </div>
@@ -629,7 +630,7 @@ export default function AdminTopicsPage() {
             close={() => setDeleting(null)}
           >
             <p className="text-sm leading-6 text-white/60">
-              Delete <strong>{deleting.item.name}</strong>?
+              Delete <strong>{deleting.kind === "topic" ? displayTopicName(deleting.item.name) : deleting.item.name}</strong>?
             </p>
             {assigned > 0 ? (
               <p className="mt-4 text-sm leading-6 text-[#E28906]">
