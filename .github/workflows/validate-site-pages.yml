@@ -37,6 +37,8 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
+      - name: Generate Next.js route types
+        run: npx next typegen
       - name: Typecheck Next.js
         run: npx tsc --noEmit
       - name: Build Next.js
