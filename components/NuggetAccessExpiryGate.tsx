@@ -5,17 +5,18 @@ import Link from "next/link";
 
 function formatRemaining(milliseconds: number) {
   const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  return [hours, minutes, seconds]
+  const clock = [hours, minutes, seconds]
     .map(value => String(value).padStart(2, "0"))
     .join(":");
+  return days > 0 ? `${days}d ${clock}` : clock;
 }
 
 export default function NuggetAccessExpiryGate({
   expiresAt,
-  durationHours = 24,
   restored = false,
   children,
 }: {
@@ -47,12 +48,12 @@ export default function NuggetAccessExpiryGate({
             Access period ended
           </p>
           <h1 className="mt-4 font-serif text-[32px] text-[#FAF9F6]">
-            {restored ? "Your paid subscription access has ended" : `Your ${durationHours}-hour reading window has closed`}
+            {restored ? "Your paid subscription access has ended" : "Your monthly Nugget reading allowance has ended"}
           </h1>
           <p className="mt-4 text-[14px] leading-7 text-white/55">
             {restored
               ? "Your previously opened Nuggets are locked until a new payment is verified and your subscription is active again."
-              : "The Nuggets in your current selection are now locked. Return to the Library and open a Nugget to begin a new access period."}
+              : "Your chosen Nuggets have reached the end of their monthly reading period. Return to the Library to select your next set of Nuggets."}
           </p>
           <Link href="/library" className="bn-button mt-7 inline-flex rounded-lg bg-[#E28906] px-6 py-3 text-[13px] font-semibold text-[#080808]">
             Return to Library
