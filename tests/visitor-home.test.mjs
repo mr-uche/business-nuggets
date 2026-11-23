@@ -38,6 +38,7 @@ const Counter = load('components/VisitorNuggetCounter.tsx', {
 let count = 119;
 const Home = load('app/page.tsx', {
   'next/link': passthrough,
+  '@/components/BrandMark': passthrough,
   'next/font/google': { DM_Sans: () => ({ variable: 'dm' }), Manrope: () => ({ variable: 'manrope' }), Playfair_Display: () => ({ variable: 'playfair' }) },
   '@/components/VisitorOnly': passthrough,
   '@/components/VisitorHomeHeader': passthrough,
