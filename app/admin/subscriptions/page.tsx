@@ -59,7 +59,17 @@ type BillingTransaction = {
   createdAt: string;
 };
 
+type SubscriptionSummary = {
+  activeSubscribers: number;
+  expiringSoon: number;
+  graceMembers: number;
+  monthlyTopUpSales: number;
+  verifiedPayments: number;
+  monthlyRevenueByCurrency: { currency: string; amountCents: number }[];
+};
+
 type SubscriptionResponse = {
+  summary?: SubscriptionSummary;
   plans:
     SubscriptionPlan[];
 
@@ -69,6 +79,7 @@ type SubscriptionResponse = {
 
 export default function AdminSubscriptionsPage() {
   const [section, setSection] = useState<"overview" | "plans" | "topups" | "payments">("overview");
+  const [summary, setSummary] = useState<SubscriptionSummary | null>(null);
   const [
     plans,
     setPlans,
@@ -185,6 +196,7 @@ export default function AdminSubscriptionsPage() {
         );
       }
 
+      setSummary(data.summary || null);
       setPlans(
         data.plans || [],
       );
@@ -401,10 +413,12 @@ export default function AdminSubscriptionsPage() {
             <h2 className="font-serif text-2xl">Subscription Overview</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ["Members on plans", plans.reduce((n, plan) => n + plan.subscriberCount, 0).toLocaleString()],
-                ["Active plans", String(plans.filter(plan => plan.active).length)],
-                ["Verified payments", String(transactions.filter(transaction => transaction.status === "paid").length)],
-                ["Recent top-up sales", String(transactions.filter(transaction => transaction.status === "paid" && transaction.planSlug.startsWith("topup:")).length)],
+                ["Active subscribers", String(summary?.activeSubscribers ?? "—")],
+                ["This month's revenue", summary?.monthlyRevenueByCurrency.length
+                  ? summary.monthlyRevenueByCurrency.map(row => formatMoney(row.amountCents, row.currency)).join(" · ")
+                  : "—"],
+                ["Top-up sales this month", String(summary?.monthlyTopUpSales ?? "—")],
+                ["Expiring in 7 days", String(summary?.expiringSoon ?? "—")],
               ].map(([title, value]) => (
                 <article key={title} className="rounded-xl border border-white/10 bg-[#111] p-5">
                   <p className="text-sm text-white/50">{title}</p>
@@ -413,6 +427,10 @@ export default function AdminSubscriptionsPage() {
               ))}
             </div>
             <p className="mt-4 text-xs leading-5 text-white/45">
+              {summary ? `${summary.graceMembers} paid members currently in their 3-day reading grace.` : "Loading billing summary."}
+              {" "}This month\u0027s revenue uses verified paid transactions, with currencies kept separate.
+            </p>
+            <p className="mt-2 text-xs leading-5 text-white/45">
               Subscription billing and monthly Nugget allowances are separate.
               Annual subscribers receive fresh monthly allowances. Top-up credits roll over until used.
               Paid readers retain previously opened Nuggets for three days after subscription expiry.
