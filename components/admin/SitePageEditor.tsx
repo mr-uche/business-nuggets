@@ -21,7 +21,7 @@ const action = "inline-flex min-h-9 items-center gap-2 rounded-lg border border-
 const initialPage = (): LegalDocument => ({
   title: "", introduction: "", notice: "", isCustom: true, published: false,
   showInNavigation: true, navLabel: "", metaDescription: "",
-  sections: [{ id: "section-" + crypto.randomUUID(), title: "", body: "", kind: "text" }],
+  sections: [{ id: "section-intro", title: "", body: "", kind: "text" }],
 });
 const newSection = (kind: BlockKind): SiteSection => ({
   id: "section-" + crypto.randomUUID(), title: "", body: "", kind, width: "full",
