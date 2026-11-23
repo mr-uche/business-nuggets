@@ -35,6 +35,7 @@ import { BIBLE_GROUPS } from "@/lib/bible-books";
 import { getCollections, type PublicCollection } from "@/lib/collections-api";
 import { getPublishedNuggetsWithAccess } from "@/lib/nuggets-api";
 import { libraryPageNumbers } from "@/lib/library-pagination";
+import { displayTopicName } from "@/lib/topic-display";
 
 import { getTopicCatalog, type TopicCatalog } from "@/lib/topics-api";
 
@@ -455,9 +456,9 @@ function LibraryContent() {
 
   const topicCards = useMemo(() => {
     return catalog.topics.map((topic, index) => ({
-      title: topic.name,
+      title: displayTopicName(topic.name),
       slug: topic.slug,
-      description: topic.description || topicDescriptions[topic.name] || `Explore published biblical business wisdom on ${topic.name}.`,
+      description: topic.description || topicDescriptions[topic.name] || topicDescriptions[displayTopicName(topic.name)] || `Explore published biblical business wisdom on ${displayTopicName(topic.name)}.`,
       count: topic.nuggetCount,
       image: topic.image || topicImages[topic.name] || fallbackTopicImages[index % fallbackTopicImages.length],
     }));
@@ -576,7 +577,7 @@ function LibraryContent() {
     selectedCategories.length === 1
       ? `inside ${catalog.categories.find(category => category.slug === selectedCategories[0])?.name || "the selected category"}`
       : selectedTopics.length === 1
-      ? `inside ${selectedTopics[0]}`
+      ? `inside ${displayTopicName(selectedTopics[0])}`
       : selectedChallenge
         ? `for ${selectedChallenge}`
         : selectedBook
@@ -907,7 +908,7 @@ function LibraryContent() {
                 (topic) => (
                   <Link
                     key={
-                      topic.title
+                      topic.slug
                     }
                   href={`/topics/${topic.slug}`}
                     className="group relative min-w-0 overflow-hidden rounded-xl border border-white/10"
@@ -1429,7 +1430,7 @@ function NuggetCard({
         <div className="flex items-center justify-between gap-3">
           <span className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#E28906]">
             {nugget.tag ||
-              nugget.topic}
+              displayTopicName(nugget.topic)}
           </span>
 
           <span className="flex items-center gap-1.5 text-[13px] text-white/40">

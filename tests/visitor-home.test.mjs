@@ -26,6 +26,7 @@ const Library = load('components/VisitorHomeLibrary.tsx', {
   react: { useMemo: fn => fn(), useState: initial => [initial, () => {}] },
   'next/link': passthrough,
   '@/lib/nugget-text': { nuggetExcerpt: text => text },
+  '@/lib/topic-display': { displayTopicName: text => text },
   '@/app/visitor-home.module.css': styles,
 });
 const nugget = number => ({ number, slug: `nugget-${number}`, title: `Teaching ${number}`, topic: 'Leadership', tag: 'leadership', scriptureRef: 'Proverbs 3:5', keyPrinciple: 'Act wisely.', marketplaceApplication: '' });
@@ -37,6 +38,7 @@ const Counter = load('components/VisitorNuggetCounter.tsx', {
 let count = 119;
 const Home = load('app/page.tsx', {
   'next/link': passthrough,
+  '@/components/BrandMark': passthrough,
   'next/font/google': { DM_Sans: () => ({ variable: 'dm' }), Manrope: () => ({ variable: 'manrope' }), Playfair_Display: () => ({ variable: 'playfair' }) },
   '@/components/VisitorOnly': passthrough,
   '@/components/VisitorHomeHeader': passthrough,
@@ -55,7 +57,9 @@ test('homepage counter follows the complete backend total while its preview stay
     assert.equal(section.props.nuggets.length, 9);
     const rendered = nodes(Library(section.props));
     assert.equal(rendered.filter(node => node.type === 'article').length, 9);
-    assert.ok(rendered.filter(node => node.type === passthrough).every(node => node.props.href === '/library'));
+    const links = rendered.filter(node => node.type === passthrough).map(node => node.props.href);
+    assert.ok(links.includes('/library'));
+    assert.ok(links.some(href => /^\/nugget\//.test(href)));
   }
 });
 test('unavailable counter does not substitute the preview-card count', () => {
