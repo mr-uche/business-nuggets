@@ -158,7 +158,7 @@ export class NuggetsService {
       ? await db.orm.public.BillingTransaction.where({ userId, status: "paid" }).all()
       : [];
     const latestPaidAt = payments.reduce<string | null>((latest, transaction) => {
-      if (transaction.planSlug === "free" || !transaction.paidAt) return latest;
+      if (transaction.planSlug === "free" || transaction.planSlug.startsWith("topup:") || !transaction.paidAt) return latest;
       const paymentTime = Date.parse(transaction.paidAt);
       if (!Number.isFinite(paymentTime)) return latest;
       return !latest || paymentTime > Date.parse(latest) ? transaction.paidAt : latest;
