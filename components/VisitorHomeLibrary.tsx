@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { nuggetExcerpt } from "@/lib/nugget-text";
+import { displayTopicName } from "@/lib/topic-display";
 import { useMemo, useState } from "react";
 import styles from "@/app/visitor-home.module.css";
 
@@ -97,7 +98,7 @@ export default function VisitorHomeLibrary({ nuggets }: { nuggets: HomeNugget[] 
           {visible.slice(0, 9).map((nugget) => (
             <article className={`visitor-nugget-card ${styles.card}`} key={nugget.slug}>
               <div className={styles.cardtop}>
-                <span className={styles.cardtag}>{nugget.topic || nugget.tag}</span>
+                <span className={styles.cardtag}>{displayTopicName(nugget.topic || nugget.tag)}</span>
                 <span className={styles.cardnum}>{String(nugget.number).padStart(2, "0")}</span>
               </div>
 
