@@ -17,6 +17,11 @@ export class AppSettingsController {
     private readonly legalPagesService: LegalPagesService,
   ) {}
 
+  @Get("site-pages")
+  listPublishedPages() {
+    return this.legalPagesService.listCustomPages(true);
+  }
+
   @Get(["legal/:slug", "pages/:slug"])
   getLegalPage(@Param("slug") slug: string) {
     return this.legalPagesService.getPage(slug);
