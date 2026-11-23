@@ -76,10 +76,14 @@ export default function MembershipPage() {
     void loadMembership();
   }, []);
 
-  const isPremium = user?.membershipTier?.toLowerCase() === "premium";
   const expiry = Date.parse(user?.subscriptionExpiresAt || "");
-  const inGrace = isPremium && Number.isFinite(expiry) &&
-    Date.now() >= expiry && Date.now() < expiry + 72 * 60 * 60 * 1000;
+  const hasPaidPlan = user?.membershipTier?.toLowerCase() === "premium" &&
+    user?.subscriptionPlan !== "free" &&
+    user?.subscriptionStatus !== "cancelled" &&
+    user?.subscriptionStatus !== "revoked";
+  const isPremium = Boolean(hasPaidPlan && Number.isFinite(expiry) &&
+    Date.now() < expiry + 72 * 60 * 60 * 1000);
+  const inGrace = isPremium && Date.now() >= expiry;
 
   return (
     <>
