@@ -1,4 +1,5 @@
 import FormattedNuggetText from "@/components/FormattedNuggetText";
+import { displayTopicName } from "@/lib/topic-display";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Share2 } from "lucide-react";
@@ -77,7 +78,7 @@ export default async function NuggetDetailPage({
           <div className="relative mx-auto flex min-h-[350px] max-w-[1280px] items-end px-5 pb-12 sm:px-8 lg:px-10">
             <div className="max-w-[950px]">
               <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#E28906]">
-                Nugget #{nugget.number} · {nugget.topic}
+                Nugget #{nugget.number} · {displayTopicName(nugget.topic)}
               </p>
 
               <h1 className="bn-hero-title mt-4 max-w-[1000px] font-serif text-[40px] leading-[1.08] text-[#FAF9F6]">
@@ -188,7 +189,7 @@ export default async function NuggetDetailPage({
         <AudioBar
           trackKind="nugget"
           title={nugget.title}
-          subtitle={`${nugget.scriptureRef} · ${nugget.topic}`}
+          subtitle={`${nugget.scriptureRef} · ${displayTopicName(nugget.topic)}`}
           audioSrc={nugget.nuggetAudioUrl || null}
           slug={nugget.slug}
         />
