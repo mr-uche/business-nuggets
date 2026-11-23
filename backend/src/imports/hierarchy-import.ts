@@ -9,6 +9,7 @@ import {
 } from '../topics/topics-csv';
 import { csvCell } from './import-file';
 import { nuggetImportColumnKey, parseNuggets } from './nugget-import';
+import { normalizeImportedTopicName } from './topic-name-normalization';
 
 const columnKey = nuggetImportColumnKey;
 /** Flat rows support taxonomy alone, Nuggets alone, or all three levels with a type column. */
@@ -132,9 +133,35 @@ export async function importHierarchy(
   const parsed = splitHierarchy(csv, kind);
   try {
     return await db.transaction(async (tx) => {
-      const existing = await tx.orm.public.Nugget.all();
+      const [existing, existingTopics] = await Promise.all([
+        tx.orm.public.Nugget.all(),
+        tx.orm.public.Topic.all(),
+      ]);
+      // Preserve existing topic identities (and their slugs/follows). If a
+      // previously imported Topic still has a B01T01 prefix, reuse it rather
+      // than creating a duplicate clean Topic with the same visible label.
+      const existingByCleanName = new Map<string, string[]>();
+      for (const topic of existingTopics) {
+        const key = taxonomyKey(normalizeImportedTopicName(topic.name));
+        const entries = existingByCleanName.get(key) ?? [];
+        entries.push(topic.name);
+        existingByCleanName.set(key, entries);
+      }
+      const resolveTopicName = (rawName: string) => {
+        const cleaned = normalizeImportedTopicName(rawName);
+        const options = existingByCleanName.get(taxonomyKey(cleaned)) ?? [];
+        const exact = options.find((name) => taxonomyKey(name) === taxonomyKey(cleaned));
+        if (exact) return exact;
+        if (options.length > 1) {
+          throw new ConflictException(
+            `Multiple existing Topics match "${cleaned}" after removing their prefixes. Resolve the duplicate Topics in Admin before importing; no records were saved.`,
+          );
+        }
+        return options[0] ?? cleaned;
+      };
       const nuggets = parsed.nuggets.map((row) => ({
         ...row,
+        data: { ...row.data, topic: resolveTopicName(row.data.topic) },
         action: existing.some(
           (item) =>
             item.number === row.data.number ||
@@ -145,7 +172,9 @@ export async function importHierarchy(
           : 'create',
       }));
       const newNuggets = nuggets.filter((row) => row.action === 'create');
-      const rows = parsed.taxonomy.map((row) => ({ ...row }));
+      const rows = parsed.taxonomy.map((row) => row.type === 'topic'
+        ? { ...row, name: resolveTopicName(row.name) }
+        : { ...row });
       for (const nugget of newNuggets) {
         const matching = rows.find(
           (row) =>
@@ -246,6 +275,8 @@ export async function importHierarchy(
         );
         return {
           ...row,
+          // Preview the readable label, even when reusing an older prefixed Topic.
+          name: row.type === 'topic' ? normalizeImportedTopicName(row.name) : row.name,
           action:
             row.type === 'topic' && topic && assignmentIds.has(topic.id)
               ? 'assign'
@@ -262,7 +293,7 @@ export async function importHierarchy(
         row: row.row,
         type: 'nugget',
         name: row.data.title,
-        topic: topicNames.get(taxonomyKey(row.data.topic)) || row.data.topic,
+        topic: normalizeImportedTopicName(topicNames.get(taxonomyKey(row.data.topic)) || row.data.topic),
         category:
           row.category ||
           rows.find(
