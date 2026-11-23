@@ -19,8 +19,8 @@ export class TopUpsService {
         SELECT "reference" FROM "NuggetTopUpOrder" LIMIT 1
       `.returnsRow({ reference: "pg/text@1" }).build());
       await db.runtime().query(db.raw.sql`
-        SELECT "id" FROM "NuggetTopUpCreditLot" LIMIT 1
-      `.returnsRow({ id: "pg/int8@1" }).build());
+        SELECT "id"::text AS "id" FROM "NuggetTopUpCreditLot" LIMIT 1
+      `.returnsRow({ id: "pg/text@1" }).build());
       await db.runtime().query(db.raw.sql`
         SELECT "nuggetId" FROM "NuggetTopUpRedemption" LIMIT 1
       `.returnsRow({ nuggetId: "pg/text@1" }).build());
