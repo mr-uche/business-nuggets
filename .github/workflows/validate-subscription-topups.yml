@@ -36,7 +36,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
       - name: Test paid grace and module wiring
-        run: npm test -- --runInBand src/nuggets/paid-history-access.spec.ts src/nuggets/monthly-nugget-allowance.spec.ts src/nuggets/nuggets.module.spec.ts
+        run: npm test -- --runInBand src/nuggets/paid-history-access.spec.ts src/nuggets/monthly-nugget-allowance.spec.ts src/topups/topups-policy.spec.ts src/nuggets/nuggets.module.spec.ts
       - name: Build backend
         run: npm run build
 
