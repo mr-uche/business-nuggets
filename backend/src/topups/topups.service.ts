@@ -53,7 +53,7 @@ export class TopUpsService {
       VALUES (${input.slug}, ${input.name.trim()}, ${input.credits}, ${input.priceCents}, ${input.currency}, ${input.validityDays})
       ON CONFLICT ("slug") DO NOTHING
     `.affectedCount().build());
-    if (Number(affected) === 0) throw new ConflictException("A Top-up bundle with that slug already exists.");
+    if (affected.affectedRows === 0) throw new ConflictException("A Top-up bundle with that slug already exists.");
     return (await this.listBundles(true)).find(row => row.slug === input.slug);
   }
 
@@ -126,7 +126,7 @@ export class TopUpsService {
     if (!wallet.lots.some(lot => lot.reference === reference)) {
       throw new ServiceUnavailableException("The payment is verified but the credit grant is not recorded. Retry verification or contact support; no duplicate charge is required.");
     }
-    return { credited: Number(granted) > 0, wallet };
+    return { credited: granted.affectedRows > 0, wallet };
   }
 
   async getRedeemedIds(userId: number): Promise<Set<string>> {
@@ -170,7 +170,7 @@ export class TopUpsService {
         VALUES (${userId}, ${nuggetId})
         ON CONFLICT ("userId", "nuggetId") DO NOTHING
       `.affectedCount().build());
-      if (Number(reserved) === 0) return false;
+      if (reserved.affectedRows === 0) return false;
       const debit = await tx.execute(db.raw.sql`
         UPDATE "NuggetTopUpCreditLot"
         SET "remainingCredits" = "remainingCredits" - 1
@@ -180,7 +180,7 @@ export class TopUpsService {
           ORDER BY "purchasedAt", "id" LIMIT 1 FOR UPDATE SKIP LOCKED
         ) AND "remainingCredits" > 0
       `.affectedCount().build());
-      if (Number(debit) !== 1) throw new ForbiddenException({
+      if (debit.affectedRows !== 1) throw new ForbiddenException({
         code: "TOPUP_CREDITS_EXHAUSTED",
         message: "No unused Top-up Nuggets remain. Buy a bundle or wait for the next monthly allowance.",
       });
