@@ -419,7 +419,7 @@ export class NuggetsService {
             accessReason: session && !sessionActive
               ? "ACCESS_PERIOD_EXPIRED"
               : canOpen ? "OPEN_TO_START" : "NUGGET_QUOTA_REACHED",
-            accessAvailableAt: sessionActive ? session?.expiresAt ?? null : null,
+            accessAvailableAt: sessionActive && session ? this.effectiveAccessExpiry(session.expiresAt, context.user) : null,
             accessExpiresAt: null,
             scriptureText: "",
             keyPrinciple: "",
@@ -436,7 +436,7 @@ export class NuggetsService {
           accessDurationHours: context.policy.accessDurationHours,
           quotaWindowHours: context.policy.quotaWindowHours,
           startedAt: sessionActive ? session?.startedAt : null,
-          expiresAt: sessionActive ? session?.expiresAt : null,
+          expiresAt: sessionActive && session ? this.effectiveAccessExpiry(session.expiresAt, context.user) : null,
           used: usedIds.size,
           remaining: Math.max(0, context.policy.maxNuggets - usedIds.size),
         };
