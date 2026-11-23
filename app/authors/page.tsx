@@ -13,6 +13,7 @@ import {
 } from "@/lib/authors";
 
 import { getSitePage } from "@/lib/site-pages";
+import { SitePageBlock, SiteSectionExtras } from "@/components/SitePageBlock";
 
 export default async function AuthorsPage() {
   const page = await getSitePage("authors");
@@ -22,6 +23,7 @@ export default async function AuthorsPage() {
       slug: section.id,
       name: section.title,
       description: section.body,
+      sourceSection: section,
       roleLabel: original?.roleLabel ?? "Contributor",
       works: original?.works ?? [],
     };
@@ -56,7 +58,9 @@ export default async function AuthorsPage() {
 
         <section className="mt-8 grid gap-5 lg:grid-cols-2">
           {authors.map(
-            (author) => (
+            (author) => author.sourceSection.kind && author.sourceSection.kind !== "author" ? (
+              <div key={author.slug} className="lg:col-span-2"><SitePageBlock section={author.sourceSection} /></div>
+            ) : (
               <article
                 key={
                   author.slug
@@ -80,6 +84,8 @@ export default async function AuthorsPage() {
                     author.description
                   }
                 </p>
+
+                <SiteSectionExtras section={author.sourceSection} />
 
                 {/* WORKS */}
 
