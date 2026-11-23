@@ -1,6 +1,7 @@
 import Link from "next/link";
 import InformationLayout from "@/components/InformationLayout";
 import PageNotice from "@/components/PageNotice";
+import { SitePageBlock, SiteSectionExtras } from "@/components/SitePageBlock";
 import { getSitePage } from "@/lib/site-pages";
 
 export const dynamic = "force-dynamic";
@@ -10,11 +11,12 @@ export default async function PhilosophyPage() {
     <PageNotice text={document.notice} />
     <div className="grid gap-6 md:grid-cols-3">
       {document.sections.map(section => {
+        if (section.kind && section.kind !== "text") return <div key={section.id} className="md:col-span-3"><SitePageBlock section={section} /></div>;
         const isPrinciple = section.id.startsWith("principle-");
-        if (section.id === "scripture") return <section key={section.id} className="rounded-[10px] border border-[#E28906]/45 bg-[#111111] px-6 py-6 md:col-span-3 sm:px-7"><blockquote className="whitespace-pre-wrap font-serif text-[20px] italic leading-7 text-white/85">{section.body}</blockquote><p className="mt-4 text-[11px] uppercase tracking-[0.08em] text-[#E28906]">{section.title}</p></section>;
-        return <section key={section.id} className={isPrinciple ? "rounded-[10px] border border-white/10 bg-[#111111] p-5" : "md:col-span-3"}>
+        if (section.id === "scripture") return <section key={section.id} className="rounded-[10px] border border-[#E28906]/45 bg-[#111111] px-6 py-6 md:col-span-3 sm:px-7"><blockquote className="whitespace-pre-wrap font-serif text-[20px] italic leading-7 text-white/85">{section.body}</blockquote><p className="mt-4 text-[11px] uppercase tracking-[0.08em] text-[#E28906]">{section.title}</p><SiteSectionExtras section={section} /></section>;
+        return <section key={section.id} className={section.width === "full" ? "md:col-span-3" : section.width === "half" ? "md:col-span-2" : isPrinciple ? "rounded-[10px] border border-white/10 bg-[#111111] p-5" : "md:col-span-3"}>
           <h2 className="font-serif text-[30px]! leading-tight">{section.title}</h2>
-          <p className="mt-4 max-w-[850px] whitespace-pre-wrap text-[15px] leading-7 text-white/50">{section.body}</p>
+          <p className="mt-4 max-w-[850px] whitespace-pre-wrap text-[15px] leading-7 text-white/50">{section.body}</p><SiteSectionExtras section={section} />
         </section>;
       })}
     </div>
