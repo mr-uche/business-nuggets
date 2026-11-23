@@ -14,7 +14,7 @@ import { ReorderTopicsDto } from "./dto/admin-write.dto";
 import { UpdateBrandingDto } from "../app-settings/branding.dto";
 import { UpdateGeneralSettingsDto, UpdateSecuritySettingsDto, UpdateMaintenanceModeDto } from "./dto/admin-write.dto";
 import { LegalPagesService } from "../app-settings/legal-pages.service";
-import { UpdateLegalPageDto } from "../app-settings/legal-pages.dto";
+import { CreateSitePageDto, UpdateLegalPageDto } from "../app-settings/legal-pages.dto";
 import {
   Body,
   Controller,
@@ -808,10 +808,28 @@ async createAdminAccount(
      SETTINGS
   ========================================= */
 
+  @Get("settings/site-pages")
+  @RequireAdminPermission("settings")
+  listCreatedSitePages() {
+    return this.legalPagesService.listCustomPages();
+  }
+
+  @Post("settings/site-pages")
+  @RequireAdminPermission("settings")
+  createSitePage(@Body() body: CreateSitePageDto) {
+    return this.legalPagesService.createPage(body);
+  }
+
+  @Delete("settings/site-pages/:slug")
+  @RequireAdminPermission("settings")
+  deleteSitePage(@Param("slug") slug: string) {
+    return this.legalPagesService.deleteCustomPage(slug);
+  }
+
   @Get(["settings/legal/:slug", "settings/pages/:slug"])
   @RequireAdminPermission("settings")
   async getLegalPage(@Param("slug") slug: string) {
-    return { document: await this.legalPagesService.getPage(slug) };
+    return { document: await this.legalPagesService.getPageForAdmin(slug) };
   }
 
   @Patch(["settings/legal/:slug", "settings/pages/:slug"])
