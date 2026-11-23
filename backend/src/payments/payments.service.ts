@@ -15,6 +15,7 @@ import {
 
 import { db } from "../prisma/db";
 import { SubscriptionsService } from "../subscriptions/subscriptions.service";
+import { TopUpsService, TOP_UP_PLAN_PREFIX } from "../topups/topups.service";
 
 type PaystackInitializeResponse = {
   status: boolean;
@@ -53,140 +54,62 @@ export class PaymentsService {
   constructor(
     private readonly subscriptionsService:
       SubscriptionsService,
+    private readonly topups: TopUpsService,
   ) {}
 
   async getPlans() {
     return this.subscriptionsService.getPublicPlans();
   }
 
-  async initializePayment(
-    userId: number,
-    planSlug: string,
-  ) {
-    const normalizedPlanSlug =
-      planSlug
-        ?.trim()
-        .toLowerCase();
+  async initializePayment(userId: number, planSlug: string) {
+    const normalizedPlanSlug = planSlug?.trim().toLowerCase();
+    if (!normalizedPlanSlug) throw new BadRequestException("Choose a subscription plan or Top-up bundle.");
 
-    if (!normalizedPlanSlug) {
-      throw new BadRequestException(
-        "A subscription plan is required.",
-      );
+    const isTopUp = normalizedPlanSlug.startsWith(TOP_UP_PLAN_PREFIX);
+    const user = await db.orm.public.User.where({ id: userId }).first();
+    if (!user) throw new NotFoundException("User not found.");
+
+    let amountCents: number;
+    let currency: string;
+    if (isTopUp) {
+      const slug = normalizedPlanSlug.slice(TOP_UP_PLAN_PREFIX.length);
+      const bundle = (await this.topups.listBundles()).find(item => item.slug === slug);
+      if (!bundle) throw new NotFoundException("Top-up bundle not found.");
+      amountCents = bundle.priceCents;
+      currency = bundle.currency.toUpperCase();
+    } else {
+      await this.subscriptionsService.getPublicPlans();
+      const plan = await db.orm.public.SubscriptionPlan.where({ slug: normalizedPlanSlug }).first();
+      if (!plan || !plan.active) throw new NotFoundException("Subscription plan not found.");
+      if (plan.priceCents <= 0 || plan.billingCycle === "free")
+        throw new BadRequestException("The free plan does not require payment.");
+      amountCents = plan.priceCents;
+      currency = plan.currency.toUpperCase();
     }
 
-    await this.subscriptionsService.getPublicPlans();
-
-    const [user, plan] =
-      await Promise.all([
-        db.orm.public.User
-          .where({
-            id: userId,
-          })
-          .first(),
-
-        db.orm.public.SubscriptionPlan
-          .where({
-            slug:
-              normalizedPlanSlug,
-          })
-          .first(),
-      ]);
-
-    if (!user) {
-      throw new NotFoundException(
-        "User not found.",
-      );
+    const reference = `bnb-${userId}-${Date.now()}-${randomBytes(5).toString("hex")}`;
+    if (isTopUp) {
+      // The order snapshots bundle price/quantity at purchase time.
+      await this.topups.saveOrder(reference, userId, normalizedPlanSlug.slice(TOP_UP_PLAN_PREFIX.length));
     }
-
-    if (
-      !plan ||
-      !plan.active
-    ) {
-      throw new NotFoundException(
-        "Subscription plan not found.",
-      );
-    }
-
-    if (
-      plan.priceCents <= 0 ||
-      plan.billingCycle ===
-        "free"
-    ) {
-      throw new BadRequestException(
-        "The free plan does not require payment.",
-      );
-    }
-
-    const reference =
-      `bnb-${userId}-${Date.now()}-${randomBytes(
-        5,
-      ).toString("hex")}`;
 
     await db.orm.public.BillingTransaction.create({
       userId,
-      planSlug:
-        plan.slug,
-      amountCents:
-        plan.priceCents,
-      currency:
-        plan.currency.toUpperCase(),
-      status:
-        "pending",
-      provider:
-        "paystack",
-      providerReference:
-        reference,
-      paidAt:
-        null,
+      planSlug: normalizedPlanSlug,
+      amountCents, currency, status: "pending", provider: "paystack",
+      providerReference: reference, paidAt: null,
     });
-
-    const callbackUrl =
-      process.env
-        .PAYSTACK_CALLBACK_URL ||
-      `${
-        process.env.FRONTEND_URL ||
-        "https://business-nuggets-theta.vercel.app"
-      }/payment/callback`;
-
+    const callbackUrl = process.env.PAYSTACK_CALLBACK_URL ||
+      `${process.env.FRONTEND_URL || "https://business-nuggets-theta.vercel.app"}/payment/callback`;
     try {
-      const payload =
-        await this.initializeWithPaystack({
-          email:
-            user.email,
-          amount:
-            plan.priceCents,
-          currency:
-            plan.currency.toUpperCase(),
-          reference,
-          callbackUrl,
-          metadata: {
-            userId,
-            planSlug:
-              plan.slug,
-          },
-        });
-
-      return {
-        provider:
-          "paystack",
-        authorizationUrl:
-          payload.authorization_url,
-        accessCode:
-          payload.access_code,
-        reference:
-          payload.reference,
-      };
+      const payload = await this.initializeWithPaystack({
+        email: user.email, amount: amountCents, currency, reference, callbackUrl,
+        metadata: { userId, planSlug: normalizedPlanSlug },
+      });
+      return { provider: "paystack", authorizationUrl: payload.authorization_url,
+        accessCode: payload.access_code, reference: payload.reference, purchaseType: isTopUp ? "topup" : "subscription" };
     } catch (error) {
-      await db.orm.public.BillingTransaction
-        .where({
-          providerReference:
-            reference,
-        })
-        .update({
-          status:
-            "failed",
-        });
-
+      await db.orm.public.BillingTransaction.where({ providerReference: reference }).update({ status: "failed" });
       throw error;
     }
   }
@@ -364,6 +287,14 @@ export class PaymentsService {
           "paid",
         paidAt,
       });
+
+    if (transaction.planSlug.startsWith(TOP_UP_PLAN_PREFIX)) {
+      const topUp = await this.topups.grantVerifiedCredits(normalizedReference, transaction.userId);
+      return {
+        success: true, reference: normalizedReference, transactionStatus: "paid",
+        purchaseType: "topup", topUp,
+      };
+    }
 
     const membership =
       await this.rebuildMembershipFromPaidTransactions(
