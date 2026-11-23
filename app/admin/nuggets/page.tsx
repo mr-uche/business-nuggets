@@ -24,6 +24,7 @@ import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import { adminApiFetch } from "@/lib/admin-api";
 import AdminImportDialog from "@/components/admin/AdminImportDialog";
 import AdminShell from "@/components/admin/AdminShell";
+import { displayTopicName } from "@/lib/topic-display";
 import R2BulkSongMatchDialog from "@/components/admin/R2BulkSongMatchDialog";
 import { API_URL } from "@/lib/api";
 
@@ -624,7 +625,7 @@ export default function AdminNuggetsPage() {
                     topic
                   }
                 >
-                  {topic}
+                  {displayTopicName(topic)}
                 </option>
               ),
             )}
@@ -864,7 +865,7 @@ export default function AdminNuggetsPage() {
 
                         <td className="px-4 py-4 text-[8px] text-white/40">
                           {
-                            nugget.topic
+                            displayTopicName(nugget.topic)
                           }
                         </td>
 
