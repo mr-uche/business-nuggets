@@ -428,7 +428,7 @@ export default function AdminSubscriptionsPage() {
             </div>
             <p className="mt-4 text-xs leading-5 text-white/45">
               {summary ? `${summary.graceMembers} paid members currently in their 3-day reading grace.` : "Loading billing summary."}
-              {" "}This month\u0027s revenue uses verified paid transactions, with currencies kept separate.
+              {" "}Monthly revenue uses verified paid transactions, with currencies kept separate.
             </p>
             <p className="mt-2 text-xs leading-5 text-white/45">
               Subscription billing and monthly Nugget allowances are separate.
