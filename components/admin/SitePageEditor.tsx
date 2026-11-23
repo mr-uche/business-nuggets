@@ -89,6 +89,40 @@ export default function SitePageEditor({
       i === index ? { ...block, ...patch } : block) });
   }
 
+
+  function insertFaqTable(index: number) {
+    if (!document) return;
+
+    const section = document.sections[index];
+
+    if (!section) return;
+
+    const template = [
+      "| Column 1 | Column 2 | Column 3 |",
+      "|---|---|---|",
+      "| Value 1 | Value 2 | Value 3 |",
+      "| Value 4 | Value 5 | Value 6 |",
+    ].join("\n");
+
+    const currentBody = section.body.trimEnd();
+
+    const nextBody = currentBody
+      ? `${currentBody}\n\n${template}`
+      : template;
+
+    if (nextBody.length > 10000) {
+      setError(
+        "This FAQ answer is too long to add another table.",
+      );
+      return;
+    }
+
+    editSection(index, {
+      body: nextBody,
+    });
+  }
+
+
   function moveBlock(from: number, to: number) {
     if (!document || from === to || from < 0 || to < 0 || to >= document.sections.length) return;
     const sections = [...document.sections];
@@ -263,10 +297,48 @@ export default function SitePageEditor({
                     <input maxLength={200} value={section.title} className={field}
                       onChange={event => editSection(index, { title: event.target.value })} />
                   </label>
-                  <label className="block sm:col-span-2">Content
-                    <textarea rows={5} maxLength={10000} value={section.body} className={field}
-                      onChange={event => editSection(index, { body: event.target.value })} />
-                  </label>
+                  
+                  <div className="sm:col-span-2">
+                    <label
+                      htmlFor={`site-page-content-${section.id}`}
+                      className="block text-sm"
+                    >
+                      Content
+                    </label>
+
+                    <textarea
+                      id={`site-page-content-${section.id}`}
+                      rows={8}
+                      maxLength={10000}
+                      value={section.body}
+                      className={field}
+                      onChange={(event) =>
+                        editSection(index, {
+                          body: event.target.value,
+                        })
+                      }
+                    />
+
+                      {(slug === "faqs" || section.kind === "faq") && (
+                        <div className="mt-3 space-y-2">
+                          <button
+                            type="button"
+                            onClick={() => insertFaqTable(index)}
+                            className="inline-flex min-h-10 items-center rounded-lg border border-[#E28906]/40 px-4 py-2 text-sm font-medium text-[#E28906] transition hover:bg-[#E28906]/10"
+                          >
+                            + Insert Table
+                          </button>
+
+                          <p className="text-xs leading-5 text-white/45">
+                            Insert a table template, then edit the
+                            headings and values above. Use the |
+                            symbol to separate columns and keep the
+                            separator row below the headings.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
                   <label className="block sm:col-span-2">Image URL (optional)
                     <input className={field} maxLength={2000} value={section.imageUrl || ""} placeholder="https://… or /images/…"
                       onChange={event => editSection(index, { imageUrl: event.target.value })} />
