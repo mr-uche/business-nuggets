@@ -517,17 +517,17 @@ export class AdminController {
   ========================================= */
 
   @Get("subscriptions/topups")
-  @RequireAdminPermission("manageSubscriptions")
+  @RequireAdminPermission("billing")
   listTopUpBundles() { return this.topupsService.listBundles(true); }
 
   @Post("subscriptions/topups")
-  @RequireAdminPermission("manageSubscriptions")
+  @RequireAdminPermission("billing")
   createTopUpBundle(@Body() input: CreateTopUpBundleDto) {
     return this.topupsService.createBundle(input);
   }
 
   @Patch("subscriptions/topups/:slug")
-  @RequireAdminPermission("manageSubscriptions")
+  @RequireAdminPermission("billing")
   updateTopUpBundle(@Param("slug") slug: string, @Body() input: UpdateTopUpBundleDto) {
     return this.topupsService.updateBundle(slug, input);
   }
