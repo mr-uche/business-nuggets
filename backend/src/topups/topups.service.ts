@@ -10,51 +10,23 @@ export class TopUpsService {
   private setup?: Promise<void>;
   private ensureTables() {
     if (!this.setup) this.setup = (async () => {
-      await db.runtime().execute(db.raw.sql`
-        CREATE TABLE IF NOT EXISTS "NuggetTopUpBundle" (
-          "slug" text PRIMARY KEY, "name" text NOT NULL,
-          "credits" integer NOT NULL CHECK ("credits" BETWEEN 1 AND 10000),
-          "priceCents" integer NOT NULL CHECK ("priceCents" BETWEEN 1 AND 1000000000),
-          "currency" text NOT NULL DEFAULT 'USD',
-          "validityDays" integer NOT NULL DEFAULT 30 CHECK ("validityDays" BETWEEN 1 AND 3650),
-          "active" boolean NOT NULL DEFAULT true,
-          "createdAt" timestamptz NOT NULL DEFAULT NOW(),
-          "updatedAt" timestamptz NOT NULL DEFAULT NOW()
-        )
-      `.affectedCount().build());
-      await db.runtime().execute(db.raw.sql`
-        CREATE TABLE IF NOT EXISTS "NuggetTopUpOrder" (
-          "reference" text PRIMARY KEY, "userId" integer NOT NULL,
-          "bundleSlug" text NOT NULL, "credits" integer NOT NULL CHECK ("credits" > 0),
-          "amountCents" integer NOT NULL CHECK ("amountCents" > 0),
-          "currency" text NOT NULL, "validityDays" integer NOT NULL CHECK ("validityDays" > 0),
-          "createdAt" timestamptz NOT NULL DEFAULT NOW()
-        )
-      `.affectedCount().build());
-      await db.runtime().execute(db.raw.sql`
-        CREATE TABLE IF NOT EXISTS "NuggetTopUpCreditLot" (
-          "id" bigserial PRIMARY KEY, "reference" text NOT NULL UNIQUE,
-          "userId" integer NOT NULL, "bundleSlug" text NOT NULL,
-          "totalCredits" integer NOT NULL CHECK ("totalCredits" > 0),
-          "remainingCredits" integer NOT NULL CHECK ("remainingCredits" >= 0),
-          "purchasedAt" timestamptz NOT NULL,
-          "originalExpiresAt" timestamptz NOT NULL
-        )
-      `.affectedCount().build());
-      await db.runtime().execute(db.raw.sql`
-        CREATE INDEX IF NOT EXISTS "NuggetTopUpCreditLot_user_idx"
-        ON "NuggetTopUpCreditLot" ("userId", "purchasedAt", "id")
-      `.affectedCount().build());
-      await db.runtime().execute(db.raw.sql`
-        CREATE TABLE IF NOT EXISTS "NuggetTopUpRedemption" (
-          "userId" integer NOT NULL, "nuggetId" text NOT NULL,
-          "redeemedAt" timestamptz NOT NULL DEFAULT NOW(),
-          PRIMARY KEY ("userId", "nuggetId")
-        )
-      `.affectedCount().build());
+      // Schema setup is an explicit DBA/migration operation, never attempted
+      // by the production application role during a customer request.
+      await db.runtime().query(db.raw.sql`
+        SELECT "slug" FROM "NuggetTopUpBundle" LIMIT 1
+      `.returnsRow({ slug: "pg/text@1" }).build());
+      await db.runtime().query(db.raw.sql`
+        SELECT "reference" FROM "NuggetTopUpOrder" LIMIT 1
+      `.returnsRow({ reference: "pg/text@1" }).build());
+      await db.runtime().query(db.raw.sql`
+        SELECT "id" FROM "NuggetTopUpCreditLot" LIMIT 1
+      `.returnsRow({ id: "pg/int8@1" }).build());
+      await db.runtime().query(db.raw.sql`
+        SELECT "nuggetId" FROM "NuggetTopUpRedemption" LIMIT 1
+      `.returnsRow({ nuggetId: "pg/text@1" }).build());
     })().catch(() => {
       this.setup = undefined;
-      throw new ServiceUnavailableException("Top-up tables must be provisioned by a database administrator.");
+      throw new ServiceUnavailableException("Top-up storage is not yet provisioned. Ask an administrator to apply the Top-up schema migration.");
     });
     return this.setup;
   }
