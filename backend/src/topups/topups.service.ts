@@ -149,7 +149,11 @@ export class TopUpsService {
         AND "amountCents" = ${transaction.amountCents} AND "currency" = ${transaction.currency}
       ON CONFLICT ("reference") DO NOTHING
     `.affectedCount().build());
-    return { credited: Number(granted) > 0, wallet: await this.getWallet(userId) };
+    const wallet = await this.getWallet(userId);
+    if (!wallet.lots.some(lot => lot.reference === reference)) {
+      throw new ServiceUnavailableException("The payment is verified but the credit grant is not recorded. Retry verification or contact support; no duplicate charge is required.");
+    }
+    return { credited: Number(granted) > 0, wallet };
   }
 
   async getRedeemedIds(userId: number): Promise<Set<string>> {
@@ -178,7 +182,7 @@ export class TopUpsService {
       lifetimeUsed: lots.reduce((n, lot) => n + lot.totalCredits - lot.remainingCredits, 0),
       canSpend: hasActivePaidSubscription(user),
       inGrace: isPaidSubscriptionInGrace(user),
-      graceEndsAt: paidReadingExpiry(user),
+      graceEndsAt: isPaidSubscriptionInGrace(user) ? paidReadingExpiry(user) : null,
       rollover: true, lots,
     };
   }
@@ -186,6 +190,9 @@ export class TopUpsService {
   /** Unique redemption + conditional debit in one transaction prevents double spending. */
   async redeem(userId: number, nuggetId: string, expiresAt: string) {
     await this.ensureTables();
+    const user = await db.orm.public.User.where({ id: userId }).first();
+    if (!user || !hasActivePaidSubscription(user))
+      throw new ForbiddenException("An active paid subscription is required to use Top-up credits.");
     return db.transaction(async tx => {
       const reserved = await tx.execute(db.raw.sql`
         INSERT INTO "NuggetTopUpRedemption" ("userId", "nuggetId")
