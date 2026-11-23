@@ -1,101 +1,118 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
+import SitePageEditor from "@/components/admin/SitePageEditor";
 import { adminApiFetch, readAdminJson } from "@/lib/admin-api";
-import { siteDefaults as defaults, sitePageLinks, type SiteSlug } from "@/lib/site-page-config";
-import type { LegalDocument } from "@/lib/legal-pages";
+import { siteDefaults, sitePageLinks, type SiteSlug } from "@/lib/site-page-config";
+
+type CustomPageSummary = {
+  slug: string;
+  title: string;
+  published: boolean;
+  showInNavigation: boolean;
+  href: string;
+};
+const coreSlugs = Object.keys(siteDefaults) as SiteSlug[];
 
 export default function AdminSitePagesPage() {
-  const [slug, setSlug] = useState<SiteSlug>("about");
+  const [slug, setSlug] = useState<string>("about");
+  const [creating, setCreating] = useState(false);
+  const [customPages, setCustomPages] = useState<CustomPageSummary[]>([]);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
-  return <AdminShell>
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-8">
-      <h1 className="font-serif text-[37px]!">Site Pages</h1>
-      <p className="mt-3 text-sm leading-6 text-white/60">Edit About, Contact, FAQs, Privacy Policy and Terms of Use. Saving publishes changes immediately. Settings permission is required.</p>
-      <div className="my-6 flex flex-wrap gap-3" role="group" aria-label="Choose site page">
-        {(Object.keys(defaults) as SiteSlug[]).map(value => <button key={value} type="button" aria-pressed={slug === value} disabled={saving} onClick={() => { if (value !== slug && (!dirty || window.confirm("Discard your unsaved changes?"))) { setDirty(false); setSlug(value); } }} className={`rounded border px-4 py-3 text-sm ${slug === value ? "border-[#E28906] bg-[#E28906] text-black" : "border-white/20"}`}>{sitePageLinks[value].label}</button>)}
-      </div>
-      <SiteEditor key={slug} slug={slug} onDirtyChange={setDirty} onSavingChange={setSaving} />
-    </div>
-  </AdminShell>;
-}
+  const [listError, setListError] = useState("");
 
-function SiteEditor({ slug, onDirtyChange, onSavingChange }: { slug: SiteSlug; onDirtyChange: (dirty: boolean) => void; onSavingChange: (saving: boolean) => void }) {
-  const [document, setDocument] = useState<LegalDocument | null>(null);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
-
+  async function loadCustomPages(signal?: AbortSignal) {
+    try {
+      const response = await adminApiFetch("/settings/site-pages", { signal, cache: "no-store" });
+      const pages = await readAdminJson<CustomPageSummary[]>(response);
+      if (!signal?.aborted) { setCustomPages(pages || []); setListError(""); }
+    } catch (error) {
+      if (!signal?.aborted) setListError(error instanceof Error ? error.message : "Could not load custom pages.");
+    }
+  }
   useEffect(() => {
     const controller = new AbortController();
-    async function load() {
-      try {
-        const response = await adminApiFetch(`/settings/pages/${slug}`, { signal: controller.signal, cache: "no-store" });
-        const data = await readAdminJson<LegalDocument | { document: LegalDocument | null }>(response, { allowEmpty: true });
-        const saved = data && "document" in data ? data.document : data;
-        if (!controller.signal.aborted) setDocument(saved ?? structuredClone(defaults[slug]));
-      } catch (cause) {
-        if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Could not load page.");
-      } finally { if (!controller.signal.aborted) setLoading(false); }
-    }
-    void load();
+    void loadCustomPages(controller.signal);
     return () => controller.abort();
-  }, [slug]);
+  }, []);
 
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
-
-  function update(next: LegalDocument) { setDocument(next); setDirty(true); onDirtyChange(true); setSuccess(""); }
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!document) return;
-    setSaving(true); onSavingChange(true); setError(""); setSuccess("");
-    try {
-      const { title, introduction, notice, sections } = document;
-      const response = await adminApiFetch(`/settings/pages/${slug}`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, introduction, notice, sections }),
-      });
-      const data = await readAdminJson<LegalDocument>(response);
-      if (!data) throw new Error("The page was not returned after saving. Please reload to check it.");
-      setDocument(data); setDirty(false); onDirtyChange(false); setSuccess("Published successfully. The public page will show this content on its next load.");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not save page."); }
-    finally { setSaving(false); onSavingChange(false); }
+  function choose(next: string, isNew = false) {
+    if (saving || (dirty && !window.confirm("Discard unsaved page changes?"))) return;
+    setDirty(false);
+    setSlug(next);
+    setCreating(isNew);
   }
 
-  const fieldClass = "mt-2 w-full rounded-lg border border-white/20 bg-[var(--bn-surface)] px-4 py-3 text-white outline-none focus:border-[#E28906]";
-  if (loading) return <p role="status">Loading site page…</p>;
-  if (!document) return <p role="alert" className="text-red-300">{error}</p>;
-  return <form onSubmit={save} className="space-y-6">
-    <fieldset disabled={saving} className="space-y-6 disabled:opacity-60">
-      <label className="block">Page title<input required maxLength={200} value={document.title} onChange={event => update({ ...document, title: event.target.value })} className={fieldClass} /></label>
-      <label className="block">Introduction<textarea rows={3} maxLength={3000} value={document.introduction} onChange={event => update({ ...document, introduction: event.target.value })} className={fieldClass} /></label>
-      <label className="block">Notice (optional)<textarea rows={3} maxLength={3000} value={document.notice} onChange={event => update({ ...document, notice: event.target.value })} className={fieldClass} /></label>
-      {slug === "contact" && <p className="text-sm text-[#E28906]">Change the support email in <Link href="/admin/settings" className="underline">Settings → General</Link>. The email button uses that address automatically.</p>}
-      <p className="text-sm leading-6 text-white/50">Use plain text. Blank lines separate paragraphs. HTML is displayed as text.</p>
-      {document.sections.map((section, index) => <fieldset key={section.id} className="space-y-4 rounded-xl border border-white/15 p-5">
-        <legend className="px-2 text-[#E28906]">{slug === "faqs" ? "Question" : slug === "authors" ? "Author" : "Section"} {index + 1}</legend>
-        <label className="block">{slug === "faqs" ? "Question" : slug === "authors" ? "Author name" : "Section title"}<input required maxLength={200} value={section.title} onChange={event => update({ ...document, sections: document.sections.map((item, i) => i === index ? { ...item, title: event.target.value } : item) })} className={fieldClass} /></label>
-        <label className="block">{slug === "faqs" ? "Answer" : slug === "authors" ? "Biography" : "Content"}<textarea required rows={8} maxLength={10000} value={section.body} onChange={event => update({ ...document, sections: document.sections.map((item, i) => i === index ? { ...item, body: event.target.value } : item) })} className={fieldClass} /></label>
-        <button type="button" disabled={document.sections.length === 1} onClick={() => update({ ...document, sections: document.sections.filter((_, i) => i !== index) })} className="text-sm text-red-300 disabled:opacity-40">Remove {slug === "faqs" ? "question" : slug === "authors" ? "author" : "section"}</button>
-      </fieldset>)}
-      <button type="button" disabled={document.sections.length >= 40} onClick={() => update({ ...document, sections: [...document.sections, { id: `section-${crypto.randomUUID()}`, title: "", body: "" }] })} className="rounded-lg border border-white/25 px-4 py-3 disabled:opacity-40">Add {slug === "faqs" ? "question" : slug === "authors" ? "author" : "section"}</button>
-    </fieldset>
-    {error && <p role="alert" className="text-red-300">{error}</p>}
-    {success && <p role="status" className="text-green-300">{success}</p>}
-    <div className="flex flex-wrap items-center gap-5">
-      <button type="submit" disabled={saving || !dirty} className="rounded-lg bg-[#E28906] px-6 py-3 font-semibold text-black disabled:opacity-50">{saving ? "Publishing…" : "Save & publish"}</button>
-      <Link href={sitePageLinks[slug].href} target="_blank" rel="noopener noreferrer" className="text-[#E28906]">View public page ↗</Link>
-      {dirty && <span className="text-sm text-white/50">Unsaved changes</span>}
-    </div>
-  </form>;
+  function onSaved(pageSlug: string) {
+    setDirty(false);
+    if (creating) { setSlug(pageSlug); setCreating(false); }
+    void loadCustomPages();
+  }
+
+  function onDeleted() {
+    setDirty(false);
+    setSlug("about");
+    setCreating(false);
+    void loadCustomPages();
+  }
+
+  return (
+    <AdminShell>
+      <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="font-serif text-[37px]!">Site Pages</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/60">
+              Edit and rearrange content blocks on existing informational pages, or build new site pages.
+              Manage headings, images, links, section layouts and drafts without changing code.
+              Settings permission is required.
+            </p>
+          </div>
+          <button type="button" disabled={saving} onClick={() => choose("", true)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#E28906] px-4 py-3 font-semibold text-[#10110f] disabled:opacity-50">
+            <Plus size={17} /> New site page
+          </button>
+        </div>
+        {listError && <p role="alert" className="mt-5 text-sm text-amber-300">{listError}</p>}
+        <div className="mt-8 grid min-w-0 gap-7 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="min-w-0 space-y-3 lg:sticky lg:top-24 lg:self-start">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-white/50">Existing pages</h2>
+            <div className="space-y-1">
+              {coreSlugs.map(value => (
+                <button key={value} type="button" disabled={saving} aria-pressed={!creating && slug === value}
+                  onClick={() => choose(value)} className={"w-full rounded-lg border px-3 py-3 text-left text-sm disabled:opacity-50 " +
+                    (!creating && slug === value ? "border-[#E28906] bg-[#E28906]/10 text-[#E28906]" : "border-transparent text-white/70 hover:border-white/20")}>
+                  {sitePageLinks[value].label}
+                </button>
+              ))}
+            </div>
+            <div className="border-t border-white/10 pt-5">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-white/50">New pages</h2>
+              {customPages.length === 0 && <p className="text-xs leading-5 text-white/40">No extra pages created yet.</p>}
+              <div className="space-y-1">
+                {customPages.map(page => (
+                  <button key={page.slug} type="button" disabled={saving} onClick={() => choose(page.slug)}
+                    aria-pressed={!creating && slug === page.slug}
+                    className={"w-full rounded-lg border px-3 py-3 text-left text-sm disabled:opacity-50 " +
+                      (!creating && slug === page.slug ? "border-[#E28906] bg-[#E28906]/10" : "border-transparent hover:border-white/20")}>
+                    <span className="block break-words text-white/85">{page.title}</span>
+                    <span className={"mt-1 block text-xs " + (page.published ? "text-emerald-400" : "text-amber-300")}>
+                      {page.published ? "Published" : "Draft"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+          <main className="min-w-0">
+            <SitePageEditor key={creating ? "new" : slug} slug={slug} creating={creating}
+              onDirty={setDirty} onSaving={setSaving} onSaved={onSaved} onDeleted={onDeleted} />
+          </main>
+        </div>
+      </div>
+    </AdminShell>
+  );
 }
