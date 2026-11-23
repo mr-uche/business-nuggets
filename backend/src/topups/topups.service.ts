@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { db } from "../prisma/db";
 import { hasActivePaidSubscription, isPaidSubscriptionInGrace, paidReadingExpiry } from "../nuggets/paid-history-access";
+import { summarizeTopUpLots } from "./topups-policy";
 
 export const TOP_UP_PLAN_PREFIX = "topup:";
 
@@ -149,9 +150,7 @@ export class TopUpsService {
       purchasedAt:"pg/timestamptz-string@1", originalExpiresAt:"pg/timestamptz-string@1",
     }).build());
     return {
-      balance: lots.reduce((n, lot) => n + lot.remainingCredits, 0),
-      lifetimePurchased: lots.reduce((n, lot) => n + lot.totalCredits, 0),
-      lifetimeUsed: lots.reduce((n, lot) => n + lot.totalCredits - lot.remainingCredits, 0),
+      ...summarizeTopUpLots(lots),
       canSpend: hasActivePaidSubscription(user),
       inGrace: isPaidSubscriptionInGrace(user),
       graceEndsAt: isPaidSubscriptionInGrace(user) ? paidReadingExpiry(user) : null,
