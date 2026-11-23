@@ -26,6 +26,7 @@ const Library = load('components/VisitorHomeLibrary.tsx', {
   react: { useMemo: fn => fn(), useState: initial => [initial, () => {}] },
   'next/link': passthrough,
   '@/lib/nugget-text': { nuggetExcerpt: text => text },
+  '@/lib/topic-display': { displayTopicName: text => text },
   '@/app/visitor-home.module.css': styles,
 });
 const nugget = number => ({ number, slug: `nugget-${number}`, title: `Teaching ${number}`, topic: 'Leadership', tag: 'leadership', scriptureRef: 'Proverbs 3:5', keyPrinciple: 'Act wisely.', marketplaceApplication: '' });
