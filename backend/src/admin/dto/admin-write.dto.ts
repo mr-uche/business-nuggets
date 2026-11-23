@@ -217,6 +217,27 @@ export class CreateSubscriptionPlanDto {
   @IsString({ each: true })
   @MaxLength(200, { each: true })
   features?: string[];
+
+  // Monthly nugget allowance. These fields were missing from the validation DTO,
+  // so the global admin request interceptor was discarding and rejecting them.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  maxNuggets?: number;
+
+  // Retain legacy API compatibility; no longer exposed in the admin form.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(8760)
+  accessDurationHours?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(8760)
+  quotaWindowHours?: number;
 }
 
 export class UpdateSubscriptionPlanDto {
@@ -250,6 +271,25 @@ export class UpdateSubscriptionPlanDto {
   @IsString({ each: true })
   @MaxLength(200, { each: true })
   features?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  maxNuggets?: number;
+
+  // Legacy compatibility; UI now uses monthly allowance only.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(8760)
+  accessDurationHours?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(8760)
+  quotaWindowHours?: number;
 
   @IsOptional()
   @IsBoolean()
