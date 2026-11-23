@@ -1,4 +1,5 @@
 import BrandMark from "@/components/BrandMark";
+import CustomSitePageLinks from "@/components/CustomSitePageLinks";
 import Link from "next/link";
 import styles from "./Footer.module.css";
 
@@ -45,6 +46,7 @@ export default function Footer() {
             >
               Terms of Use
             </Link>
+            <CustomSitePageLinks variant="footer" />
           </nav>
         </div>
 
