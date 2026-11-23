@@ -16,10 +16,12 @@ function formatRemaining(milliseconds: number) {
 export default function NuggetAccessExpiryGate({
   expiresAt,
   durationHours = 24,
+  restored = false,
   children,
 }: {
   expiresAt?: string | null;
   durationHours?: number;
+  restored?: boolean;
   children: React.ReactNode;
 }) {
   const expiryTime = expiresAt ? new Date(expiresAt).getTime() : null;
@@ -45,10 +47,12 @@ export default function NuggetAccessExpiryGate({
             Access period ended
           </p>
           <h1 className="mt-4 font-serif text-[32px] text-[#FAF9F6]">
-            Your {durationHours}-hour reading window has closed
+            {restored ? "Your paid subscription access has ended" : `Your ${durationHours}-hour reading window has closed`}
           </h1>
           <p className="mt-4 text-[14px] leading-7 text-white/55">
-            The nuggets in your current selection are now locked. Return to the library and open any nugget to begin a new access period.
+            {restored
+              ? "Your previously opened Nuggets are locked until a new payment is verified and your subscription is active again."
+              : "The Nuggets in your current selection are now locked. Return to the Library and open a Nugget to begin a new access period."}
           </p>
           <Link href="/library" className="bn-button mt-7 inline-flex rounded-lg bg-[#E28906] px-6 py-3 text-[13px] font-semibold text-[#080808]">
             Return to Library
@@ -61,7 +65,7 @@ export default function NuggetAccessExpiryGate({
   return (
     <>
       <div className="sticky top-0 z-[60] flex items-center justify-center gap-3 border-b border-[#E28906]/25 bg-[#111111] px-4 py-2.5 text-[12px] text-white/70">
-        <span className="uppercase tracking-[0.08em] text-[#E28906]">Your access ends in</span>
+        <span className="uppercase tracking-[0.08em] text-[#E28906]">{restored ? "Renewed subscription access ends in" : "Your access ends in"}</span>
         <span className="font-mono text-[14px] font-semibold tabular-nums text-[#FAF9F6]">
           {formatRemaining(remaining)}
         </span>

@@ -66,7 +66,7 @@ export default async function NuggetDetailPage({
   }
 
   return (
-    <NuggetAccessExpiryGate expiresAt={nugget.accessExpiresAt} durationHours={nugget.accessDurationHours}>
+    <NuggetAccessExpiryGate expiresAt={nugget.accessExpiresAt} durationHours={nugget.accessDurationHours} restored={nugget.accessRestored}>
     <div className="min-h-screen bg-[#080808] text-[#FAF9F6]">
      <NuggetAnalyticsTracker nuggetId={nugget.id}/>
       <Navbar />
