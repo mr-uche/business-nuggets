@@ -15,6 +15,7 @@ import FollowTopicButton from "@/components/FollowTopicButton";
 import { getPublishedNuggets } from "@/lib/nuggets-api";
 import { getServerMemberToken } from "@/lib/server-member-token";
 import { getTopicCatalog } from "@/lib/topics-api";
+import { displayTopicName } from "@/lib/topic-display";
 
 import type { Nugget } from "@/types/nugget";
 
@@ -50,6 +51,8 @@ export default async function TopicDetailPage({
   if (!topic) {
     notFound();
   }
+
+  const visibleTopic = displayTopicName(topic);
 
   const topicNuggets = nuggets.filter(
     (nugget) => nugget.topic.trim().toLowerCase() === topic.trim().toLowerCase(),
@@ -93,7 +96,7 @@ export default async function TopicDetailPage({
         <section className="relative min-h-[330px] overflow-hidden border-b border-white/[0.06]">
           <Image
             src={heroImage}
-            alt={topic}
+            alt={visibleTopic}
             fill
             priority
             sizes="100vw"
@@ -120,11 +123,11 @@ export default async function TopicDetailPage({
                   </p>
 
                   <h1 className="bn-hero-title mt-3 font-serif text-[40px] leading-tight text-white">
-                    {topic}
+                    {visibleTopic}
                   </h1>
 
                   <p className="mt-4 max-w-[700px] text-[14px] leading-6 text-white/55">
-                    Explore biblical business wisdom, practical principles and marketplace applications connected to {topic}.
+                    Explore biblical business wisdom, practical principles and marketplace applications connected to {visibleTopic}.
                   </p>
 
                   <p className="mt-3 text-[13px] text-white/40">
@@ -145,7 +148,7 @@ export default async function TopicDetailPage({
           {featured && (
             <section>
               <h2 className="font-serif text-[28px]">
-                Featured {topic} Wisdom
+                Featured {visibleTopic} Wisdom
               </h2>
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
@@ -217,7 +220,7 @@ export default async function TopicDetailPage({
                           : "border-white/10 bg-[#161616] text-white/50 hover:border-[#E28906]/30"
                       }`}`}
                     >
-                      All {topic}
+                      All {visibleTopic}
                     </Link>
 
                     {segments.map((segment) => (
@@ -245,7 +248,7 @@ export default async function TopicDetailPage({
                 <h2 className="font-serif text-[28px]">
                   {selectedSegment
                     ? `${selectedSegment} Nuggets`
-                    : `All ${topic} Nuggets`}
+                    : `All ${visibleTopic} Nuggets`}
                 </h2>
 
                 <p className="mt-2 text-[14px] text-white/45">
