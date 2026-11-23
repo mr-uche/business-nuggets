@@ -42,7 +42,7 @@ export default async function ReaderViewPage({
       return <PremiumNuggetGate />;
     }
     if (error instanceof NuggetAccessError) {
-      return <NuggetAccessLimitGate message={error.message} />;
+      return <NuggetAccessLimitGate message={error.message} code={error.code} />;
     }
 
     throw error;
