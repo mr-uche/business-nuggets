@@ -1,6 +1,7 @@
 "use client";
 
 import BrandMark from "@/components/BrandMark";
+import CustomSitePageLinks from "@/components/CustomSitePageLinks";
 import { ProfileAvatar } from "@/components/ProfileImage";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -211,6 +212,8 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            <CustomSitePageLinks variant="header" />
 
             {!isLoggedIn && (
               <div className="mt-4 flex items-center gap-[22px] border-t border-[rgba(226,137,6,.19)] pt-4 lg:hidden">

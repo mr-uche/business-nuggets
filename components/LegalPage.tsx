@@ -1,5 +1,6 @@
 import Link from "next/link";
 import InformationLayout from "@/components/InformationLayout";
+import { SitePageBlock, SiteSectionExtras } from "@/components/SitePageBlock";
 import { getLegalDocument, type LegalSlug } from "@/lib/legal-pages";
 
 export default async function LegalPage({ slug }: { slug: LegalSlug }) {
@@ -13,10 +14,12 @@ export default async function LegalPage({ slug }: { slug: LegalSlug }) {
           {document.sections.map(section => <Link key={section.id} href={`#${section.id}`} className="block text-sm leading-6 text-[#b4b2ab] hover:text-[#E28906]">{section.title}</Link>)}
         </nav>
         <article className="min-w-0 space-y-8">
-          {document.sections.map(section => (
+          {document.sections.map(section => section.kind && section.kind !== "text" ? (
+            <SitePageBlock key={section.id} section={section} />
+          ) : (
             <section key={section.id} id={section.id} className="scroll-mt-28 border-b border-[#E28906]/15 pb-8">
               <h2 className="font-serif text-[30px]! leading-tight">{section.title}</h2>
-              <p className="mt-4 whitespace-pre-wrap text-[15px] leading-8 text-[#b4b2ab]">{section.body}</p>
+              <p className="mt-4 whitespace-pre-wrap text-[15px] leading-8 text-[#b4b2ab]">{section.body}</p><SiteSectionExtras section={section} />
             </section>
           ))}
           <div className="flex flex-wrap gap-5 text-sm text-[#E28906]">
