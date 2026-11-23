@@ -17,8 +17,8 @@ not delete or rewrite existing member subscriptions, Nugget grants or payments.
 1. Take a verified, restorable production database backup.
 2. Apply `backend/ops/sql/20261123_topups.sql` to **staging**, then run a
    least-privilege smoke test for CRUD, reads and lot sequence usage.
-   The backend tries idempotent CREATE TABLE on first Top-up request, but this
-   must not be relied on if the app DB role lacks CREATE privileges.
+   The backend only checks that these tables exist; it deliberately does not
+   issue CREATE TABLE from customer requests. Set up schema with a migration role.
 3. Ensure the runtime DB role has SELECT/INSERT/UPDATE on the new tables and
    USAGE/SELECT on `NuggetTopUpCreditLot_id_seq`.
 4. Create test bundles in Admin → Subscriptions → Top-ups. No real pricing is seeded.
