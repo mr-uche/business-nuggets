@@ -218,8 +218,9 @@ export class NuggetsService {
     sessionExpiry: string,
     user: Awaited<ReturnType<NuggetsService["getAccessContext"]>>["user"],
   ): string {
-    const paidExpiry = hasActivePaidSubscription(user)
-      ? Date.parse(user.subscriptionExpiresAt ?? "")
+    // The three-day grace must not be cut off by a client-side expiry timer.
+    const paidExpiry = hasPaidReadingAccess(user)
+      ? Date.parse(paidReadingExpiry(user) ?? "")
       : NaN;
     return Number.isFinite(paidExpiry) && paidExpiry < Date.parse(sessionExpiry)
       ? user.subscriptionExpiresAt!
