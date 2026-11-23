@@ -69,12 +69,13 @@ export class PaymentsService {
     const user = await db.orm.public.User.where({ id: userId }).first();
     if (!user) throw new NotFoundException("User not found.");
 
+    const reference = `bnb-${userId}-${Date.now()}-${randomBytes(5).toString("hex")}`;
     let amountCents: number;
     let currency: string;
     if (isTopUp) {
       const slug = normalizedPlanSlug.slice(TOP_UP_PLAN_PREFIX.length);
-      const bundle = (await this.topups.listBundles()).find(item => item.slug === slug);
-      if (!bundle) throw new NotFoundException("Top-up bundle not found.");
+      // Snapshot credit count and price once: admin price edits cannot affect pending orders.
+      const bundle = await this.topups.saveOrder(reference, userId, slug);
       amountCents = bundle.priceCents;
       currency = bundle.currency.toUpperCase();
     } else {
@@ -85,12 +86,6 @@ export class PaymentsService {
         throw new BadRequestException("The free plan does not require payment.");
       amountCents = plan.priceCents;
       currency = plan.currency.toUpperCase();
-    }
-
-    const reference = `bnb-${userId}-${Date.now()}-${randomBytes(5).toString("hex")}`;
-    if (isTopUp) {
-      // The order snapshots bundle price/quantity at purchase time.
-      await this.topups.saveOrder(reference, userId, normalizedPlanSlug.slice(TOP_UP_PLAN_PREFIX.length));
     }
 
     await db.orm.public.BillingTransaction.create({
