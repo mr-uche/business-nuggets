@@ -6,7 +6,7 @@ import { loginFor } from "@/lib/auth-return";
 
 type Bundle = { slug: string; name: string; credits: number; priceCents: number; currency: string; validityDays: number; active: boolean };
 type Wallet = {
-  balance: number; lifetimePurchased: number; lifetimeUsed: number;
+  balance: number; lifetimePurchased: number; lifetimeUsed: number; rolledOver: number;
   canSpend: boolean; inGrace: boolean; graceEndsAt: string | null; rollover: boolean;
   lots: { reference: string; remainingCredits: number; originalExpiresAt: string }[];
 };
@@ -96,7 +96,7 @@ export default function TopUpBundles() {
           <div className="rounded-lg border border-[#E28906]/30 bg-[#E28906]/5 px-5 py-3 text-center">
             <p className="text-xs text-white/55">Unused Top-up Credits</p>
             <p className="mt-1 font-serif text-3xl text-[#E28906]">{wallet.balance}</p>
-            <p className="text-xs text-white/40">Roll over automatically</p>
+            <p className="text-xs text-white/40">{wallet.rolledOver} rolled-over · never expire</p>
           </div>
         )}
       </div>
