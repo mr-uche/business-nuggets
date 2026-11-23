@@ -1,5 +1,6 @@
 import { IMPORT_LIMIT } from "../imports/import-limits";
 import { BadRequestException } from '@nestjs/common';
+import { normalizeImportedTopicName } from '../imports/topic-name-normalization';
 export type TaxonomyRow = {
   row: number;
   type: 'topic' | 'category';
@@ -141,6 +142,7 @@ export function parseTaxonomyCsv(csv: string): TaxonomyRow[] {
       headers.map((header, i) => [header, record.fields[i]]),
     );
     const type = taxonomyKey(values.type);
+    if (type === 'topic') values.name = normalizeImportedTopicName(values.name);
     if (type !== 'topic' && type !== 'category')
       fail('Type must be topic or category.');
     if (!values.name || values.name.length > 120 || !taxonomySlug(values.name))
