@@ -964,6 +964,106 @@ describe('linked hierarchy imports', () => {
   });
 });
 
+describe('bulk-import Topic prefix normalization', () => {
+  const codedRows = [
+    { type: 'category', name: 'Stewardship' },
+    { type: 'topic', name: 'B01T01 Business Calling and Purpose', category: 'Stewardship' },
+    { type: 'nugget', number: 1001, title: 'B01T01 Nugget Title Must Stay', topic: 'B01T01 Business Calling and Purpose', category: 'Stewardship' },
+  ];
+
+  it.each(['json', 'csv', 'xlsx'])('strips Topic codes during %s preview and commit', async (format) => {
+    const keys = ['type', 'name', 'number', 'title', 'topic', 'category'];
+    const values = codedRows.map(row => keys.map(key => String(row[key as keyof typeof row] ?? '')));
+    let buffer: Buffer;
+    if (format === 'json') buffer = Buffer.from(JSON.stringify(codedRows));
+    else if (format === 'csv')
+      buffer = Buffer.from([keys.join(','), ...values.map(row => row.join(','))].join('\n'));
+    else {
+      const workbook = new Workbook();
+      workbook.addWorksheet('Hierarchy').addRows([keys, ...values]);
+      buffer = Buffer.from(await workbook.xlsx.writeBuffer());
+    }
+    const input = await readImportFile({
+      originalname: 'hierarchy.' + format, buffer,
+    } as Express.Multer.File);
+    const preview = await importHierarchy(input, true, 'topics');
+    expect(preview).toMatchObject({ categoriesToCreate: 1, topicsToCreate: 1, nuggetsToCreate: 1 });
+    expect('rows' in preview && preview.rows.some(row =>
+      row.type === 'topic' && row.name === 'Business Calling and Purpose')).toBe(true);
+    expect('rows' in preview && preview.rows.some(row =>
+      row.type === 'nugget' && row.topic === 'Business Calling and Purpose')).toBe(true);
+    expect(state.Topic).toEqual([]);
+    expect(state.Nugget).toEqual([]);
+
+    await importHierarchy(input, false, 'topics');
+    expect(state.Category[0].name).toBe('Stewardship');
+    expect(state.Topic[0].name).toBe('Business Calling and Purpose');
+    expect(state.Topic[0].slug).toBe('business-calling-and-purpose');
+    expect(state.Nugget[0].topic).toBe('Business Calling and Purpose');
+    expect(state.Nugget[0].title).toBe('B01T01 Nugget Title Must Stay');
+    expect(state.Nugget[0].number).toBe(1001);
+  });
+
+  it('strips prefixes from Nuggets-only imports while preserving Nuggets and categories', async () => {
+    const csv = 'number,title,topic,category\n9,First Teaching,B02T04: Money Management,Stewardship';
+    const [parsed] = parseNuggets(csv);
+    expect(parsed.data.topic).toBe('Money Management');
+    await importNuggets(csv, false);
+    expect(state.Topic[0].name).toBe('Money Management');
+    expect(state.Nugget[0].topic).toBe('Money Management');
+    expect(state.Category[0].name).toBe('Stewardship');
+  });
+
+  it('reuses existing old prefixed Topics without changing their slug or follows', async () => {
+    const name = 'B01T01 Business Calling and Purpose';
+    state.Topic.push({ ...topic(1, name), slug: 'b01t01-business-calling-and-purpose' });
+    state.FollowedTopic.push({ id: 1, userId: 7, topic: name });
+    const csv = 'number,title,topic\n41,New Nugget,B01T01 Business Calling and Purpose';
+    const preview = await importNuggets(csv, true);
+    expect(preview).toMatchObject({ topicsToCreate: 0, nuggetsToCreate: 1 });
+    expect('rows' in preview && preview.rows.find(row => row.type === 'nugget')).toMatchObject({
+      topic: 'Business Calling and Purpose',
+    });
+    await importNuggets(csv, false);
+    expect(state.Topic).toHaveLength(1);
+    expect(state.Topic[0]).toMatchObject({
+      name, slug: 'b01t01-business-calling-and-purpose',
+    });
+    expect(state.Nugget[0].topic).toBe(name);
+    expect(state.FollowedTopic[0].topic).toBe(name);
+  });
+
+  it('rejects ambiguous old prefixed Topics instead of creating duplicate assignments', async () => {
+    state.Topic.push(topic(1, 'B01T01 Business Calling and Purpose'));
+    state.Topic.push(topic(2, 'B02T02 Business Calling and Purpose'));
+    await expect(importNuggets(
+      'number,title,topic\n42,New Nugget,B01T01 Business Calling and Purpose',
+      false,
+    )).rejects.toThrow('Multiple existing Topics match');
+    expect(state.Nugget).toEqual([]);
+    expect(state.Topic).toHaveLength(2);
+  });
+
+  it('rejects two different imported codes that normalize to the same Topic', async () => {
+    await expect(importHierarchy(
+      'type,name\ntopic,B01T01 Planning\ntopic,B02T02 Planning',
+      false,
+      'topics',
+    )).rejects.toThrow('Duplicate topic');
+    expect(state.Topic).toEqual([]);
+  });
+
+  it('does not strip non-matching codes or edit a Category title', () => {
+    expect(parseTaxonomyCsv(
+      'type,name\ncategory,B01T01 Finance Category\ntopic,B01-T01 Planning\ntopic,B01T01Business',
+    )).toMatchObject([
+      { type: 'category', name: 'B01T01 Finance Category' },
+      { type: 'topic', name: 'B01-T01 Planning' },
+      { type: 'topic', name: 'B01T01Business' },
+    ]);
+  });
+});
+
 describe('bulk content actions', () => {
   it('deletes only the selected empty categories, keeping unrelated data', async () => {
     state.Category.push(category(), {

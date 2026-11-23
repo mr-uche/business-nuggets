@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { parseCsvRecords, taxonomySlug } from '../topics/topics-csv';
+import { normalizeImportedTopicName } from './topic-name-normalization';
 
 const textFields = [
   'title',
@@ -67,6 +68,8 @@ export function parseNuggets(csv: string) {
     const values = Object.fromEntries(
       headers.map((header, i) => [header!, record.fields[i]]),
     );
+    // Keep Nugget IDs/titles unchanged; normalize only the Topic reference.
+    values.topic = normalizeImportedTopicName(values.topic || '');
     const number = Number(values.number);
     if (
       !/^\d+$/.test(values.number) ||
