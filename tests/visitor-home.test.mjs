@@ -57,7 +57,9 @@ test('homepage counter follows the complete backend total while its preview stay
     assert.equal(section.props.nuggets.length, 9);
     const rendered = nodes(Library(section.props));
     assert.equal(rendered.filter(node => node.type === 'article').length, 9);
-    assert.ok(rendered.filter(node => node.type === passthrough).every(node => node.props.href === '/library'));
+    const links = rendered.filter(node => node.type === passthrough).map(node => node.props.href);
+    assert.ok(links.includes('/library'));
+    assert.ok(links.some(href => /^\/nugget\//.test(href)));
   }
 });
 test('unavailable counter does not substitute the preview-card count', () => {
