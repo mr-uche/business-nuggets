@@ -7,8 +7,10 @@ not delete or rewrite existing member subscriptions, Nugget grants or payments.
 - Paid Monthly and Annual subscriptions both receive the plan's monthly Nugget allowance.
 - After consuming it, a member with an *active* paid subscription may spend Top-up credits.
 - A Top-up gives extra selections; it does not change the subscription expiry.
-- Original bundle periods are recorded, but unused credits roll over and never expire.
-- Credits remain on account during cancellation/expiry but cannot be spent until renewal.
+- Each Top-up purchase creates a credit lot that expires exactly three calendar months after purchase.
+- The three-month credit period is independent of the subscription period. If the subscription expires first, unused Top-up credits remain valid until their own expiry date.
+- Expired unused credits are removed from the available balance and cannot be redeemed. The oldest-expiring valid lot is consumed first.
+- Credits remain on the account when the subscription expires, but can only be spent while the member has an active paid subscription. After renewal, any credits still within their three-month validity period can be redeemed.
 - During the 72 hours after paid expiry, members may reread Nuggets already granted;
   no new Nuggets or Top-up redemptions are allowed. After 72 hours paid reads lock.
 - A member suspended, revoked or cancelled has no grace access.
@@ -21,7 +23,7 @@ not delete or rewrite existing member subscriptions, Nugget grants or payments.
    issue CREATE TABLE from customer requests. Set up schema with a migration role.
 3. Ensure the runtime DB role has SELECT/INSERT/UPDATE on the new tables and
    USAGE/SELECT on `NuggetTopUpCreditLot_id_seq`.
-4. Create test bundles in Admin → Subscriptions → Top-ups. No real pricing is seeded.
+4. Create test bundles in Admin → Subscriptions → Top-ups. No real pricing is seeded; credit validity is fixed at three calendar months and is not configurable.
 5. Test Paystack end-to-end in test mode: callback and webhook, replay the same
    reference repeatedly, check one credit lot only, verify matching amount and
    currency, reject unverified/pending orders, and check payment failures.
@@ -29,9 +31,15 @@ not delete or rewrite existing member subscriptions, Nugget grants or payments.
    never become negative; same Nugget cannot consume two credits.
 7. Test paid expiry at T−1s, T, T+71h59m, and T+72h; verify that cancelled
    and suspended users cannot bypass the grace check.
-8. Test new paid renewal and annual upgrades and verify that credits do not
-   change the paid expiry or reset the monthly allowance.
-9. Confirm CI, log/error monitoring, and explicit deployment approval.
+8. Test a Top-up purchased before subscription expiry, then let the subscription
+   expire first. Confirm its unused credits remain valid until purchase date +
+   three calendar months, cannot be redeemed while membership is inactive, and
+   become usable again after renewal only if they have not expired.
+9. Test the exact credit-expiry boundary and confirm expired credits are excluded
+   from wallet balance and cannot be redeemed. Test oldest-expiring-first debit.
+10. Test new paid renewal and annual upgrades and verify that credits do not
+    change the paid expiry or reset the monthly allowance.
+11. Confirm CI, log/error monitoring, and explicit deployment approval.
 
 ## Rollback / recovery
 - Disable active bundles through Admin first to stop new purchases.
