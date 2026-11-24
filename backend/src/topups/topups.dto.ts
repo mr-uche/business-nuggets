@@ -11,8 +11,6 @@ export class CreateTopUpBundleDto {
   priceCents!: number;
   @IsString() @Matches(/^[A-Z]{3}$/)
   currency!: string;
-  @IsInt() @Min(1) @Max(3650)
-  validityDays!: number;
 }
 
 export class UpdateTopUpBundleDto {
@@ -24,8 +22,6 @@ export class UpdateTopUpBundleDto {
   priceCents?: number;
   @IsOptional() @IsString() @Matches(/^[A-Z]{3}$/)
   currency?: string;
-  @IsOptional() @IsInt() @Min(1) @Max(3650)
-  validityDays?: number;
   @IsOptional() @IsBoolean()
   active?: boolean;
 }
