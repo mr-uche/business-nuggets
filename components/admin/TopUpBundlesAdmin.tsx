@@ -7,7 +7,7 @@ import { subscriptionPlanSlug } from "@/lib/subscription-plan-slug";
 
 type Bundle = {
   slug: string; name: string; credits: number; priceCents: number;
-  currency: string; validityDays: number; active: boolean;
+  currency: string; active: boolean;
 };
 
 function money(cents: number, currency: string) {
@@ -26,7 +26,6 @@ export default function TopUpBundlesAdmin() {
   const [credits, setCredits] = useState("3");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
-  const [validityDays, setValidityDays] = useState("30");
   const [active, setActive] = useState(true);
   const slug = editing?.slug ?? subscriptionPlanSlug(name);
 
@@ -55,22 +54,18 @@ export default function TopUpBundlesAdmin() {
     setCredits(String(bundle?.credits || 3));
     setPrice(bundle ? String(bundle.priceCents / 100) : "");
     setCurrency(bundle?.currency || "USD");
-    setValidityDays(String(bundle?.validityDays || 30));
     setActive(bundle?.active ?? true);
     setModalError("");
   }
 
   async function save() {
-    const count = Number(credits), amount = Number(price), days = Number(validityDays);
+    const count = Number(credits), amount = Number(price);
     if (!slug || !name.trim()) { setModalError("Enter a bundle name so its slug can be generated."); return; }
     if (!Number.isInteger(count) || count < 1 || count > 10000) {
       setModalError("Credits must be between 1 and 10,000."); return;
     }
     if (!Number.isFinite(amount) || amount <= 0 || Math.round(amount * 100) > 1000000000) {
       setModalError("Enter a valid positive price."); return;
-    }
-    if (!Number.isInteger(days) || days < 1 || days > 3650) {
-      setModalError("Enter a valid initial bundle period."); return;
     }
     setModalError("");
     setSaving(true);
@@ -83,7 +78,7 @@ export default function TopUpBundlesAdmin() {
           body: JSON.stringify({
             ...(!editing ? { slug } : {}),
             name: name.trim(), credits: count, priceCents: Math.round(amount * 100),
-            currency: currency.toUpperCase(), validityDays: days,
+            currency: currency.toUpperCase(),
             ...(editing ? { active } : {}),
           }),
         },
@@ -105,7 +100,7 @@ export default function TopUpBundlesAdmin() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-serif text-2xl text-white">Top-up Bundles</h2>
-          <p className="mt-1 text-sm text-white/50">Extra Nugget selections for paid subscribers. Unused credits roll over until spent.</p>
+          <p className="mt-1 text-sm text-white/50">Extra Nugget selections for paid subscribers. Each purchase is valid for 3 months, even if the subscription expires first.</p>
         </div>
         <button onClick={() => edit(null)} type="button"
           className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#E28906] px-4 text-sm font-semibold text-black">
@@ -131,7 +126,7 @@ export default function TopUpBundlesAdmin() {
             <p className="mt-4 text-3xl font-semibold text-[#E28906]">+{bundle.credits} Nuggets</p>
             <p className="mt-2 text-base text-white/80">{money(bundle.priceCents, bundle.currency)}</p>
             <p className="mt-2 text-xs leading-5 text-white/50">
-              {bundle.validityDays}-day bundle period · Unused credits roll forward without expiring
+              Credit validity: 3 months from purchase
             </p>
             <button type="button" className="mt-4 text-sm font-semibold text-[#E28906]" onClick={() => edit(bundle)}>
               Edit Bundle
@@ -166,12 +161,8 @@ export default function TopUpBundlesAdmin() {
                   <input value={currency} maxLength={3} onChange={e => setCurrency(e.target.value.toUpperCase())}
                     className="mt-1 h-10 w-full rounded-md border border-white/15 bg-[#080808] px-3 text-white" />
                 </label>
-                <label className="text-sm text-white/70">Bundle period (days)
-                  <input type="number" min={1} max={3650} value={validityDays} onChange={e => setValidityDays(e.target.value)}
-                    className="mt-1 h-10 w-full rounded-md border border-white/15 bg-[#080808] px-3 text-white" />
-                </label>
               </div>
-              <p className="text-xs leading-5 text-white/50">Credits left unused after the bundle period roll over and can still be spent whenever the member has an active paid plan.</p>
+              <p className="text-xs leading-5 text-white/50">Credits expire exactly 3 months after purchase. If the subscription expires first, unused credits remain valid until their own expiry date and can be redeemed after renewal.</p>
               {editing && <label className="flex items-center gap-2 text-sm text-white/70">
                 <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /> Active and available for purchase
               </label>}
