@@ -108,11 +108,12 @@ export class TopUpsService {
     if (!transaction || transaction.userId !== userId || transaction.status !== "paid" ||
         !transaction.planSlug.startsWith(TOP_UP_PLAN_PREFIX))
       throw new ForbiddenException("A verified paid Top-up transaction is required.");
+    const purchasedAt = transaction.paidAt || transaction.createdAt || new Date().toISOString();
     const granted = await db.runtime().execute(db.raw.sql`
       INSERT INTO "NuggetTopUpCreditLot"
         ("reference", "userId", "bundleSlug", "totalCredits", "remainingCredits", "purchasedAt", "originalExpiresAt")
       SELECT "reference", "userId", "bundleSlug", "credits", "credits",
-        NOW(), NOW() + INTERVAL '3 months'
+        ${purchasedAt}::timestamptz, ${purchasedAt}::timestamptz + INTERVAL '3 months'
       FROM "NuggetTopUpOrder"
       WHERE "reference" = ${reference} AND "userId" = ${userId}
         AND "bundleSlug" = ${transaction.planSlug.slice(TOP_UP_PLAN_PREFIX.length)}
