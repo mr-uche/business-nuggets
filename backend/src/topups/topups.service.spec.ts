@@ -13,6 +13,7 @@ const mock = {
   payment: {
     userId: 7, status: "paid", planSlug: "topup:mini",
     amountCents: 900, currency: "USD", providerReference: "reference-one",
+    paidAt: "2026-11-24T09:00:00.000Z", createdAt: "2026-11-24T08:00:00.000Z",
   },
   grantStatement: "",
 };
@@ -35,14 +36,15 @@ jest.mock("../prisma/db", () => {
   async function execute(plan: Plan) {
     if (plan.statement.includes('INSERT INTO "NuggetTopUpCreditLot"')) {
       mock.grantStatement = plan.statement;
-      const reference = String(plan.args[0]);
+      const purchasedAt = String(plan.args[0]);
+      const reference = String(plan.args[2]);
       if (mock.lots.some(row => row.reference === reference)) return { affectedRows: 0 };
-      const purchasedAt = new Date();
-      const expiresAt = new Date(purchasedAt);
+      const purchaseDate = new Date(purchasedAt);
+      const expiresAt = new Date(purchaseDate);
       expiresAt.setUTCMonth(expiresAt.getUTCMonth() + 3);
       mock.lots.push({
         reference, bundleSlug: "mini", totalCredits: 2, remainingCredits: 2,
-        purchasedAt: purchasedAt.toISOString(), originalExpiresAt: expiresAt.toISOString(),
+        purchasedAt: purchaseDate.toISOString(), originalExpiresAt: expiresAt.toISOString(),
       });
       return { affectedRows: 1 };
     }
@@ -97,6 +99,7 @@ describe("verified Top-up credit ledger", () => {
     expect(mock.lots).toHaveLength(1);
     expect(replay.wallet.balance).toBe(2);
     expect(replay.wallet.expired).toBe(0);
+    expect(mock.lots[0].purchasedAt).toBe(mock.payment.paidAt);
     expect(mock.grantStatement).toContain("INTERVAL '3 months'");
   });
 
