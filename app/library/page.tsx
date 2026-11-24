@@ -20,7 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Circle,
-  Clock3,
+  Headphones,
 } from "lucide-react";
 
 import Navbar from "@/components/navbar";
@@ -1428,14 +1428,13 @@ function NuggetCard({
 
       <div className="flex min-h-[210px] flex-col p-5">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#E28906]">
+          <span className="min-w-0 flex-1 truncate text-[13px] font-semibold uppercase tracking-[0.05em] text-[#E28906]">
             {nugget.tag ||
               displayTopicName(nugget.topic)}
           </span>
 
           <NuggetAudioDuration
             src={nugget.nuggetAudioUrl || null}
-            fallback={nugget.duration}
           />
         </div>
 
@@ -1489,17 +1488,16 @@ function NuggetCard({
 
 function NuggetAudioDuration({
   src,
-  fallback,
 }: {
   src: string | null;
-  fallback: string;
 }) {
   const [minutes, setMinutes] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    setMinutes(null);
+    setFailed(false);
     if (!src) {
-      setMinutes(null);
       setFailed(true);
       return;
     }
@@ -1538,9 +1536,9 @@ function NuggetAudioDuration({
   }, [src]);
 
   return (
-    <span className="flex items-center gap-1.5 text-[13px] text-white/40">
-      <Clock3 size={13} />
-      {minutes !== null ? `${minutes} min` : failed ? fallback : "…"}
+    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/15 bg-white/5 px-2 py-1 text-[11px] text-white/60">
+      <Headphones size={13} className="shrink-0" />
+      {minutes !== null ? `Audio · ${minutes} min` : !src ? "No audio" : failed ? "Audio · —" : "Audio · …"}
     </span>
   );
 }
