@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -41,6 +40,7 @@ type GlobalAudioPlayerValue = {
   toggleMute: () => void;
   toggleRepeat: () => void;
   stop: () => void;
+  registerLocalControl: (src: string | null, active: boolean) => void;
 };
 
 const GlobalAudioPlayerContext = createContext<GlobalAudioPlayerValue | null>(null);
@@ -58,7 +58,7 @@ function formatTime(value: number) {
 
 export default function GlobalAudioPlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const pathname = usePathname();
+  const [localControlCounts, setLocalControlCounts] = useState<Record<string, number>>({});
   const [track, setTrack] = useState<GlobalAudioTrack | null>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -149,6 +149,20 @@ export default function GlobalAudioPlayerProvider({ children }: { children: Reac
     });
   }, []);
 
+  const registerLocalControl = useCallback((src: string | null, active: boolean) => {
+    if (!src) return;
+    setLocalControlCounts(current => {
+      const count = current[src] ?? 0;
+      if (active) return { ...current, [src]: count + 1 };
+      if (count <= 1) {
+        const next = { ...current };
+        delete next[src];
+        return next;
+      }
+      return { ...current, [src]: count - 1 };
+    });
+  }, []);
+
   const stop = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -165,23 +179,10 @@ export default function GlobalAudioPlayerProvider({ children }: { children: Reac
 
   const value = useMemo<GlobalAudioPlayerValue>(() => ({
     track, playing, currentTime, duration, speed, muted, repeat, error,
-    playTrack, togglePlay, seekTo, seek, changeSpeed, toggleMute, toggleRepeat, stop,
-  }), [track, playing, currentTime, duration, speed, muted, repeat, error, playTrack, togglePlay, seekTo, seek, changeSpeed, toggleMute, toggleRepeat, stop]);
+    playTrack, togglePlay, seekTo, seek, changeSpeed, toggleMute, toggleRepeat, stop, registerLocalControl,
+  }), [track, playing, currentTime, duration, speed, muted, repeat, error, playTrack, togglePlay, seekTo, seek, changeSpeed, toggleMute, toggleRepeat, stop, registerLocalControl]);
 
-  let localControlsVisible = false;
-  const route = pathname?.match(/^\/nugget\/([^/]+)(?:\/(audio|musical|reader))?$/);
-  if (track && route) {
-    let pageSlug = route[1];
-    try { pageSlug = decodeURIComponent(pageSlug); } catch {}
-    const section = route[2];
-    localControlsVisible = pageSlug === track.slug && (
-      !section ||
-      (section === "audio" && track.kind === "nugget") ||
-      (section === "musical" && track.kind === "music") ||
-      (section === "reader" && track.kind === "nugget")
-    );
-  }
-  const showMiniPlayer = Boolean(track && !localControlsVisible);
+  const showMiniPlayer = Boolean(track && !localControlCounts[track.src]);
 
   return (
     <GlobalAudioPlayerContext.Provider value={value}>
