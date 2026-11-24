@@ -1,6 +1,7 @@
 "use client";
 
 import { nuggetExcerpt } from "@/lib/nugget-text";
+import { useEffect } from "react";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -55,6 +56,12 @@ export default function MusicalView({
   function seek(amount: number) {
     if (isCurrentTrack) player.seek(amount);
   }
+
+  useEffect(() => {
+    if (!audioSrc) return;
+    player.registerLocalControl(audioSrc, true);
+    return () => player.registerLocalControl(audioSrc, false);
+  }, [audioSrc, player.registerLocalControl]);
 
   const principleLines =
     nuggetExcerpt(nugget.keyPrinciple || "")
