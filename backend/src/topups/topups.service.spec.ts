@@ -158,6 +158,18 @@ describe("verified Top-up credit ledger", () => {
     expect(mock.redeemed).toEqual(new Set());
   });
 
+  it("cannot redeem a credit lot forfeited by a subscription renewal or upgrade", async () => {
+    mock.lots = [{
+      reference: "forfeited", bundleSlug: "mini", totalCredits: 3, remainingCredits: 3,
+      purchasedAt: "2026-10-01T00:00:00Z", originalExpiresAt: "2027-01-01T00:00:00Z",
+      invalidatedAt: "2026-11-15T00:00:00Z",
+    }];
+    await expect(topups.redeem(7, "nugget-after-renewal", "2099-12-31T00:00:00Z")).rejects.toThrow();
+    expect(mock.lots[0].remainingCredits).toBe(3);
+    expect(mock.redeemed.has("nugget-after-renewal")).toBe(false);
+    expect((await topups.getWallet(7)).balance).toBe(0);
+  });
+
   it("refuses to spend credits in paid grace or on suspended accounts", async () => {
     await topups.grantVerifiedCredits("reference-one", 7);
     mock.user.subscriptionExpiresAt = "2026-11-22T00:00:00Z";
