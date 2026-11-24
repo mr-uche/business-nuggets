@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Maximize2, Pause, Play, Repeat2, Shuffle, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { useGlobalAudioPlayer } from "@/components/GlobalAudioPlayerProvider";
 import { audioTime } from "@/lib/use-audio-playback";
+import { displayTopicName } from "@/lib/topic-display";
 import { getPublishedNuggets } from "@/lib/nuggets-api";
 import type { Nugget } from "@/types/nugget";
 
@@ -60,7 +61,7 @@ export default function ReaderAudioBar({ title, subtitle, slug, coverImage, audi
         void player.playTrack({
           src: next.nuggetAudioUrl,
           title: next.title,
-          subtitle: `${next.scriptureRef} · ${next.topic}`,
+          subtitle: `${next.scriptureRef} · ${displayTopicName(next.topic)}`,
           slug: next.slug,
           coverImage: next.image,
           kind: "nugget",
