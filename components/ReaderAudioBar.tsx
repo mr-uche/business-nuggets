@@ -149,7 +149,7 @@ export default function ReaderAudioBar({ title, subtitle, slug, coverImage, audi
                 type="button"
                 aria-label="Repeat"
                 aria-pressed={repeat}
-                disabled={!audioSrc}
+                disabled={!audioSrc || !isCurrentTrack}
                 onClick={() => isCurrentTrack && player.toggleRepeat()}
                 className="text-[#756E64] transition hover:text-[#15120E]"
               >
@@ -184,7 +184,7 @@ export default function ReaderAudioBar({ title, subtitle, slug, coverImage, audi
           </button>
 
           <div className="hidden items-center justify-end gap-4 sm:w-[150px] md:flex">
-            <button type="button" aria-label={muted ? "Unmute" : "Mute"} onClick={() => isCurrentTrack && player.toggleMute()} disabled={!audioSrc} className="text-[#756E64] transition hover:text-[#15120E]">
+            <button type="button" aria-label={muted ? "Unmute" : "Mute"} onClick={() => isCurrentTrack && player.toggleMute()} disabled={!audioSrc || !isCurrentTrack} className="text-[#756E64] transition hover:text-[#15120E]">
               {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
             </button>
 
