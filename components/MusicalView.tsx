@@ -11,7 +11,8 @@ import {
   SkipForward,
 } from "lucide-react";
 
-import { useAudioPlayback } from "@/lib/use-audio-playback";
+import { useGlobalAudioPlayer } from "@/components/GlobalAudioPlayerProvider";
+import { displayTopicName } from "@/lib/topic-display";
 
 import type { Nugget } from "@/types/nugget";
 
@@ -30,7 +31,30 @@ export default function MusicalView({
   audioSrc: string | null;
   coverImage: string;
 }) {
-  const { audioRef, audioProps, playing, audioError: message, togglePlay, seek, duration } = useAudioPlayback(audioSrc);
+  const player = useGlobalAudioPlayer();
+  const isCurrentTrack = Boolean(audioSrc && player.track?.src === audioSrc);
+  const playing = isCurrentTrack && player.playing;
+  const duration = isCurrentTrack ? player.duration : 0;
+  const message = isCurrentTrack ? player.error : "";
+  function togglePlay() {
+    if (!audioSrc) return;
+    if (isCurrentTrack) {
+      void player.togglePlay();
+      return;
+    }
+    void player.playTrack({
+      src: audioSrc,
+      title: nugget.musicalTitle ?? nugget.title,
+      subtitle: `${nugget.scriptureRef} · ${displayTopicName(nugget.topic)}`,
+      slug: nugget.slug,
+      coverImage,
+      kind: "music",
+      href: `/nugget/${nugget.slug}/musical`,
+    });
+  }
+  function seek(amount: number) {
+    if (isCurrentTrack) player.seek(amount);
+  }
 
   const principleLines =
     nuggetExcerpt(nugget.keyPrinciple || "")
@@ -40,8 +64,6 @@ export default function MusicalView({
 
   return (
     <>
-      <audio ref={audioRef} {...audioProps} />
-
       <main className="mx-auto max-w-[1280px] px-5 py-12 sm:px-8 lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[340px_minmax(0,1fr)]">
           {/* MUSICAL COVER */}
@@ -68,7 +90,7 @@ export default function MusicalView({
               </h1>
 
               <p className="mt-2 text-[13px] text-white/40">
-                {nugget.scriptureRef}
+                {nugget.scriptureRef} · {displayTopicName(nugget.topic)}
               </p>
 
               <div className="mt-5 flex items-center justify-center gap-5">
