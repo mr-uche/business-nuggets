@@ -12,7 +12,8 @@ test('the root layout mounts one site-wide audio provider outside page navigatio
   assert.match(layout, /GlobalAudioPlayerProvider/);
   assert.match(layout, /<GlobalAudioPlayerProvider>\{children\}<\/GlobalAudioPlayerProvider>/);
   assert.match(provider, /<audio[\s\S]*?ref=\{audioRef\}/);
-  assert.match(provider, /usePathname/);
+  assert.match(provider, /registerLocalControl/);
+  assert.match(provider, /localControlCounts/);
   assert.match(provider, /Persistent audio player/);
 });
 
