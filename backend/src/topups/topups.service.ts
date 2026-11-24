@@ -5,7 +5,7 @@ import { summarizeTopUpLots } from "./topups-policy";
 
 export const TOP_UP_PLAN_PREFIX = "topup:";
 
-/** Credits persist after their original bundle period and roll over until consumed. */
+/** Each purchased credit lot expires three calendar months after purchase, independently of subscription expiry. */
 @Injectable()
 export class TopUpsService {
   private setup?: Promise<void>;
@@ -35,29 +35,29 @@ export class TopUpsService {
   async listBundles(includeInactive = false) {
     await this.ensureTables();
     const rows = await db.runtime().query(db.raw.sql`
-      SELECT "slug", "name", "credits", "priceCents", "currency", "validityDays", "active"
+      SELECT "slug", "name", "credits", "priceCents", "currency", "active"
       FROM "NuggetTopUpBundle" ORDER BY "credits", "priceCents", "slug"
     `.returnsRow({
       slug: "pg/text@1", name: "pg/text@1", credits: "pg/int4@1",
       priceCents: "pg/int4@1", currency: "pg/text@1",
-      validityDays: "pg/int4@1", active: "pg/bool@1",
+      active: "pg/bool@1",
     }).build());
     return includeInactive ? rows : rows.filter(row => row.active);
   }
 
-  async createBundle(input: {slug: string; name: string; credits: number; priceCents: number; currency: string; validityDays: number}) {
+  async createBundle(input: {slug: string; name: string; credits: number; priceCents: number; currency: string}) {
     this.validate(input);
     await this.ensureTables();
     const affected = await db.runtime().execute(db.raw.sql`
-      INSERT INTO "NuggetTopUpBundle" ("slug", "name", "credits", "priceCents", "currency", "validityDays")
-      VALUES (${input.slug}, ${input.name.trim()}, ${input.credits}, ${input.priceCents}, ${input.currency}, ${input.validityDays})
+      INSERT INTO "NuggetTopUpBundle" ("slug", "name", "credits", "priceCents", "currency")
+      VALUES (${input.slug}, ${input.name.trim()}, ${input.credits}, ${input.priceCents}, ${input.currency})
       ON CONFLICT ("slug") DO NOTHING
     `.affectedCount().build());
     if (affected.affectedRows === 0) throw new ConflictException("A Top-up bundle with that slug already exists.");
     return (await this.listBundles(true)).find(row => row.slug === input.slug);
   }
 
-  async updateBundle(slug: string, input: {name?: string; credits?: number; priceCents?: number; currency?: string; validityDays?: number; active?: boolean}) {
+  async updateBundle(slug: string, input: {name?: string; credits?: number; priceCents?: number; currency?: string; active?: boolean}) {
     this.validate(input);
     await this.ensureTables();
     const original = (await this.listBundles(true)).find(row => row.slug === slug);
@@ -68,7 +68,6 @@ export class TopUpsService {
         "credits" = ${input.credits ?? original.credits},
         "priceCents" = ${input.priceCents ?? original.priceCents},
         "currency" = ${input.currency ?? original.currency},
-        "validityDays" = ${input.validityDays ?? original.validityDays},
         "active" = ${input.active ?? original.active},
         "updatedAt" = NOW()
       WHERE "slug" = ${slug}
@@ -76,7 +75,7 @@ export class TopUpsService {
     return (await this.listBundles(true)).find(row => row.slug === slug);
   }
 
-  private validate(input: {slug?: string; name?: string; credits?: number; priceCents?: number; currency?: string; validityDays?: number}) {
+  private validate(input: {slug?: string; name?: string; credits?: number; priceCents?: number; currency?: string}) {
     if (input.slug !== undefined && (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.slug) || input.slug.length > 80))
       throw new BadRequestException("Use a slug of lowercase letters, numbers and single hyphens.");
     if (input.name !== undefined && (!input.name.trim() || input.name.trim().length > 100))
@@ -85,8 +84,6 @@ export class TopUpsService {
       throw new BadRequestException("Credits must be a whole number between 1 and 10,000.");
     if (input.priceCents !== undefined && (!Number.isInteger(input.priceCents) || input.priceCents < 1 || input.priceCents > 1000000000))
       throw new BadRequestException("Price must be a positive whole amount.");
-    if (input.validityDays !== undefined && (!Number.isInteger(input.validityDays) || input.validityDays < 1 || input.validityDays > 3650))
-      throw new BadRequestException("Original bundle period must be between 1 and 3650 days.");
     if (input.currency !== undefined && !/^[A-Z]{3}$/.test(input.currency))
       throw new BadRequestException("Currency must be three uppercase letters.");
   }
@@ -100,7 +97,7 @@ export class TopUpsService {
     if (!bundle) throw new NotFoundException("Active Top-up bundle not found.");
     await db.runtime().execute(db.raw.sql`
       INSERT INTO "NuggetTopUpOrder" ("reference", "userId", "bundleSlug", "credits", "amountCents", "currency", "validityDays")
-      VALUES (${reference}, ${userId}, ${bundle.slug}, ${bundle.credits}, ${bundle.priceCents}, ${bundle.currency}, ${bundle.validityDays})
+      VALUES (${reference}, ${userId}, ${bundle.slug}, ${bundle.credits}, ${bundle.priceCents}, ${bundle.currency}, 90)
     `.affectedCount().build());
     return bundle;
   }
@@ -115,7 +112,7 @@ export class TopUpsService {
       INSERT INTO "NuggetTopUpCreditLot"
         ("reference", "userId", "bundleSlug", "totalCredits", "remainingCredits", "purchasedAt", "originalExpiresAt")
       SELECT "reference", "userId", "bundleSlug", "credits", "credits",
-        NOW(), NOW() + ("validityDays" * INTERVAL '1 day')
+        NOW(), NOW() + INTERVAL '3 months'
       FROM "NuggetTopUpOrder"
       WHERE "reference" = ${reference} AND "userId" = ${userId}
         AND "bundleSlug" = ${transaction.planSlug.slice(TOP_UP_PLAN_PREFIX.length)}
@@ -143,7 +140,7 @@ export class TopUpsService {
     if (!user) throw new NotFoundException("Member not found.");
     const lots = await db.runtime().query(db.raw.sql`
       SELECT "reference", "bundleSlug", "totalCredits", "remainingCredits", "purchasedAt", "originalExpiresAt"
-      FROM "NuggetTopUpCreditLot" WHERE "userId" = ${userId} ORDER BY "purchasedAt" DESC
+      FROM "NuggetTopUpCreditLot" WHERE "userId" = ${userId} ORDER BY "originalExpiresAt", "purchasedAt" DESC
     `.returnsRow({
       reference:"pg/text@1", bundleSlug:"pg/text@1",
       totalCredits:"pg/int4@1", remainingCredits:"pg/int4@1",
@@ -154,7 +151,7 @@ export class TopUpsService {
       canSpend: hasActivePaidSubscription(user),
       inGrace: isPaidSubscriptionInGrace(user),
       graceEndsAt: isPaidSubscriptionInGrace(user) ? paidReadingExpiry(user) : null,
-      rollover: true, lots,
+      lots,
     };
   }
 
@@ -176,13 +173,13 @@ export class TopUpsService {
         SET "remainingCredits" = "remainingCredits" - 1
         WHERE "id" = (
           SELECT "id" FROM "NuggetTopUpCreditLot"
-          WHERE "userId" = ${userId} AND "remainingCredits" > 0
-          ORDER BY "purchasedAt", "id" LIMIT 1 FOR UPDATE SKIP LOCKED
-        ) AND "remainingCredits" > 0
+          WHERE "userId" = ${userId} AND "remainingCredits" > 0 AND "originalExpiresAt" > NOW()
+          ORDER BY "originalExpiresAt", "purchasedAt", "id" LIMIT 1 FOR UPDATE SKIP LOCKED
+        ) AND "remainingCredits" > 0 AND "originalExpiresAt" > NOW()
       `.affectedCount().build());
       if (debit.affectedRows !== 1) throw new ForbiddenException({
         code: "TOPUP_CREDITS_EXHAUSTED",
-        message: "No unused Top-up Nuggets remain. Buy a bundle or wait for the next monthly allowance.",
+        message: "No unused, unexpired Top-up credits remain. Buy another Top-up or wait for the next monthly allowance.",
       });
       await tx.execute(db.raw.sql`
         INSERT INTO "NuggetAccessGrant" ("userId", "nuggetId", "openedAt", "expiresAt")
