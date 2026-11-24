@@ -14,6 +14,7 @@ const mock = {
     userId: 7, status: "paid", planSlug: "topup:mini",
     amountCents: 900, currency: "USD", providerReference: "reference-one",
   },
+  grantStatement: "",
 };
 
 jest.mock("../prisma/db", () => {
@@ -33,11 +34,15 @@ jest.mock("../prisma/db", () => {
   }
   async function execute(plan: Plan) {
     if (plan.statement.includes('INSERT INTO "NuggetTopUpCreditLot"')) {
+      mock.grantStatement = plan.statement;
       const reference = String(plan.args[0]);
       if (mock.lots.some(row => row.reference === reference)) return { affectedRows: 0 };
+      const purchasedAt = new Date();
+      const expiresAt = new Date(purchasedAt);
+      expiresAt.setUTCMonth(expiresAt.getUTCMonth() + 3);
       mock.lots.push({
         reference, bundleSlug: "mini", totalCredits: 2, remainingCredits: 2,
-        purchasedAt: new Date().toISOString(), originalExpiresAt: "2001-01-01T00:00:00Z",
+        purchasedAt: purchasedAt.toISOString(), originalExpiresAt: expiresAt.toISOString(),
       });
       return { affectedRows: 1 };
     }
@@ -48,7 +53,8 @@ jest.mock("../prisma/db", () => {
       return { affectedRows: 1 };
     }
     if (plan.statement.includes('UPDATE "NuggetTopUpCreditLot"')) {
-      const lot = mock.lots.find(x => x.remainingCredits > 0);
+      const lot = mock.lots.filter(x => x.remainingCredits > 0 && Date.parse(x.originalExpiresAt) > Date.now())
+        .sort((a, b) => Date.parse(a.originalExpiresAt) - Date.parse(b.originalExpiresAt))[0];
       if (!lot) return { affectedRows: 0 };
       lot.remainingCredits--;
       return { affectedRows: 1 };
@@ -90,7 +96,8 @@ describe("verified Top-up credit ledger", () => {
     expect(replay.credited).toBe(false);
     expect(mock.lots).toHaveLength(1);
     expect(replay.wallet.balance).toBe(2);
-    expect(replay.wallet.rolledOver).toBe(2);
+    expect(replay.wallet.expired).toBe(0);
+    expect(mock.grantStatement).toContain("INTERVAL '3 months'");
   });
 
   it("never credits an unverified or other-account transaction", async () => {
@@ -110,6 +117,16 @@ describe("verified Top-up credit ledger", () => {
     await expect(topups.redeem(7, "nugget-3", "2099-12-31T00:00:00Z")).rejects.toThrow();
     expect(mock.redeemed.has("nugget-3")).toBe(false);
     expect((await topups.getWallet(7)).balance).toBe(0);
+  });
+
+  it("refuses to redeem expired credits even when the subscription is active", async () => {
+    mock.lots = [{
+      reference: "expired", bundleSlug: "mini", totalCredits: 2, remainingCredits: 2,
+      purchasedAt: "2026-07-01T00:00:00Z", originalExpiresAt: "2026-10-01T00:00:00Z",
+    }];
+    await expect(topups.redeem(7, "nugget-expired", "2099-12-31T00:00:00Z")).rejects.toThrow();
+    expect(mock.lots[0].remainingCredits).toBe(2);
+    expect(mock.redeemed.has("nugget-expired")).toBe(false);
   });
 
   it("refuses to spend credits in paid grace or on suspended accounts", async () => {
