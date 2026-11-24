@@ -11,7 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Pause, Play, Volume2, VolumeX, X } from "lucide-react";
+import { Maximize2, Pause, Play, X } from "lucide-react";
 
 export type GlobalAudioTrack = {
   src: string;
