@@ -1433,11 +1433,10 @@ function NuggetCard({
               displayTopicName(nugget.topic)}
           </span>
 
-          <span className="flex items-center gap-1.5 text-[13px] text-white/40">
-            <Clock3 size={13} />
-
-            {nugget.duration}
-          </span>
+          <NuggetAudioDuration
+            src={nugget.nuggetAudioUrl || null}
+            fallback={nugget.duration}
+          />
         </div>
 
         <h3 className="mt-3 font-serif text-[20px]! leading-[1.25]">
@@ -1485,6 +1484,64 @@ function NuggetCard({
         </div>
       </div>
     </Link>
+  );
+}
+
+function NuggetAudioDuration({
+  src,
+  fallback,
+}: {
+  src: string | null;
+  fallback: string;
+}) {
+  const [minutes, setMinutes] = useState<number | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!src) {
+      setMinutes(null);
+      setFailed(true);
+      return;
+    }
+
+    let active = true;
+    const audio = new Audio();
+    audio.preload = "metadata";
+
+    const handleMetadata = () => {
+      if (!active) return;
+      const seconds = audio.duration;
+      if (Number.isFinite(seconds) && seconds > 0) {
+        setMinutes(Math.ceil(seconds / 60));
+        setFailed(false);
+      } else {
+        setFailed(true);
+      }
+    };
+    const handleError = () => {
+      if (active) setFailed(true);
+    };
+
+    audio.addEventListener("loadedmetadata", handleMetadata);
+    audio.addEventListener("error", handleError);
+    audio.src = src;
+    audio.load();
+
+    return () => {
+      active = false;
+      audio.removeEventListener("loadedmetadata", handleMetadata);
+      audio.removeEventListener("error", handleError);
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    };
+  }, [src]);
+
+  return (
+    <span className="flex items-center gap-1.5 text-[13px] text-white/40">
+      <Clock3 size={13} />
+      {minutes !== null ? `${minutes} min` : failed ? fallback : "…"}
+    </span>
   );
 }
 
