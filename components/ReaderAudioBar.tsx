@@ -45,6 +45,12 @@ export default function ReaderAudioBar({ title, subtitle, slug, coverImage, audi
   const [tracks, setTracks] = useState<Nugget[]>([]);
   const [shuffle, setShuffle] = useState(false);
   useEffect(() => {
+    if (!audioSrc) return;
+    player.registerLocalControl(audioSrc, true);
+    return () => player.registerLocalControl(audioSrc, false);
+  }, [audioSrc, player.registerLocalControl]);
+
+  useEffect(() => {
     let active = true;
     void getPublishedNuggets().then(data => {
       if (active) setTracks(data.filter(item => item.nuggetAudioUrl && !item.locked));
