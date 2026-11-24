@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { API_URL } from "@/lib/api";
 import { loginFor } from "@/lib/auth-return";
 
-type Bundle = { slug: string; name: string; credits: number; priceCents: number; currency: string; validityDays: number; active: boolean };
+type Bundle = { slug: string; name: string; credits: number; priceCents: number; currency: string; active: boolean };
 type Wallet = {
-  balance: number; lifetimePurchased: number; lifetimeUsed: number; rolledOver: number;
-  canSpend: boolean; inGrace: boolean; graceEndsAt: string | null; rollover: boolean;
+  balance: number; lifetimePurchased: number; lifetimeUsed: number; expired: number; nextExpiryAt: string | null;
+  canSpend: boolean; inGrace: boolean; graceEndsAt: string | null;
   lots: { reference: string; remainingCredits: number; originalExpiresAt: string }[];
 };
 type Allowance = { maxNuggets: number | null; used: number; remaining: number | null; expiresAt?: string | null };
@@ -88,15 +88,16 @@ export default function TopUpBundles() {
           <p className="text-xs font-semibold uppercase tracking-widest text-[#E28906]">Additional Nuggets</p>
           <h2 className="mt-2 font-serif text-3xl text-white">Nugget Top-up Bundles</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
-            Buy extra Nugget selections when your monthly allowance runs out.
-            Unused credits roll over after the bundle period and remain yours until used.
+            Buy extra Nugget selections when your monthly allowance runs out. Each Top-up credit is valid for 3 months from purchase, even if your subscription expires sooner. Credits can be redeemed again after renewal, provided they have not expired.
           </p>
         </div>
         {wallet && (
           <div className="rounded-lg border border-[#E28906]/30 bg-[#E28906]/5 px-5 py-3 text-center">
             <p className="text-xs text-white/55">Unused Top-up Credits</p>
             <p className="mt-1 font-serif text-3xl text-[#E28906]">{wallet.balance}</p>
-            <p className="text-xs text-white/40">{wallet.rolledOver} rolled-over · never expire</p>
+            <p className="text-xs text-white/40">Valid for 3 months from purchase</p>
+            {wallet.nextExpiryAt && <p className="mt-1 text-xs text-white/45">Next expiry: {new Date(wallet.nextExpiryAt).toLocaleDateString()}</p>}
+            {wallet.expired > 0 && <p className="mt-1 text-xs text-white/40">{wallet.expired} unused credits expired</p>}
           </div>
         )}
       </div>
@@ -137,7 +138,7 @@ export default function TopUpBundles() {
             <p className="mt-1 text-sm text-white/50">Extra Nugget selections</p>
             <p className="mt-3 text-2xl text-white">{formatMoney(bundle.priceCents, bundle.currency)}</p>
             <p className="mt-2 text-xs leading-5 text-white/45">
-              Initial {bundle.validityDays}-day bundle period · Unused credits roll over and never expire.
+              Credits expire 3 months after purchase.
             </p>
             <button type="button" onClick={() => void buy(bundle.slug)}
               disabled={Boolean(paying) || (wallet !== null && !wallet.canSpend)}
