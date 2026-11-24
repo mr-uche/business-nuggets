@@ -85,6 +85,12 @@ export default function FullAudioPlayer({
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (!audioSrc) return;
+    player.registerLocalControl(audioSrc, true);
+    return () => player.registerLocalControl(audioSrc, false);
+  }, [audioSrc, player.registerLocalControl]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function checkSaved() {
